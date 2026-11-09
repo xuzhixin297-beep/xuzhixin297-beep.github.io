@@ -1,0 +1,122 @@
+
+---
+import "../styles/home.css";
+
+const {
+    title = "Antemundane sprǣc — Explore Ideas",
+    description = "An open forum for free discussion and exploration of physics, mathematics, and philosophy."
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <script is:inline>
+            const savedTheme = localStorage.getItem("theme");
+
+            if (savedTheme === "light") {
+                document.documentElement.classList.add("light-theme");
+            }
+        </script>
+
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="description" content={description} />
+
+        <title>{title}</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+
+    <body>
+        <header class="topbar">
+
+            <div class="logo animated-title" aria-label="Antemundane sprǣc">
+                <span>Ant</span>
+
+                <button
+                    class="letter-trigger"
+                    type="button"
+                    aria-label="Transform e into i using complex logarithms"
+                    aria-pressed="false"
+                >
+                    <span class="letter-e">e</span>
+                    <span class="letter-i">i</span>
+                </button>
+
+                <span>mundane</span>
+                <span class="title-ending"> sprǣc</span>
+
+                <span class="formula-overlay" aria-hidden="true">
+                    <span class="formula-forward">
+                        <span class="formula-fraction">
+                            <span class="formula-numerator">ln(−1)</span>
+                            <span class="fraction-bar"></span>
+                            <span class="formula-denominator">π</span>
+                        </span>
+                        <span class="formula-equals">= i</span>
+                    </span>
+
+                    <span class="formula-reverse">e<sup>iπ</sup> = −1</span>
+                </span>
+            </div>
+
+            <nav aria-label="Main navigation">
+                <a href="/">Home</a>
+
+                <div class="nav-dropdown">
+                    <a href="/physics/" class="nav-trigger">Physics</a>
+                    <div class="dropdown-menu">
+                        <a href="/physics/">Overview</a>
+                        <a href="/physics/forum/">Forum</a>
+                        <a href="/physics/interesting-topics/">Interesting topics</a>
+                        <a href="/physics/experiments/">Experiments & simulations</a>
+                        <a href="/physics/games/">Fun games</a>
+                    </div>
+                </div>
+
+                <div class="nav-dropdown">
+                    <a href="/mathematics/" class="nav-trigger">Mathematics</a>
+                    <div class="dropdown-menu">
+                        <a href="/mathematics/">Overview</a>
+                        <a href="/mathematics/forum/">Forum</a>
+                        <a href="/mathematics/interesting-topics/">Interesting topics</a>
+                        <a href="/mathematics/games/">Fun games</a>
+                    </div>
+                </div>
+
+                <div class="nav-dropdown">
+                    <a href="/philosophy/" class="nav-trigger">Philosophy</a>
+                    <div class="dropdown-menu">
+                        <a href="/philosophy/">Overview</a>
+                        <a href="/philosophy/forum/">Forum</a>
+                        <a href="/philosophy/epistemology/">Epistemology</a>
+                        <a href="/philosophy/religion/">Religion</a>
+                        <a href="/philosophy/games/">Fun games</a>
+                    </div>
+                </div>
+
+                <a href="/journal/">Journal</a>
+
+                <button id="theme-toggle" class="theme-toggle" type="button">
+                    Light mode
+                </button>
+            </nav>
+        </header>
+
+        <main>
+            <slot />
+        </main>
+
+        <footer>
+            <p>Built with curiosity. Powered by learning.</p>
+        </footer>
+
+        <script src="../scripts/title-animation.js"></script>
+    </body>
+</html>

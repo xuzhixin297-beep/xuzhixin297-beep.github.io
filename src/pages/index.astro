@@ -1,0 +1,114 @@
+
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+const introduction =
+    "An open forum for free discussion & exploration of physics, math, and philosophy. What we're looking for: etymology, derivation, experimentation, collision...";
+---
+
+<SiteLayout
+    title="Antemundane sprǣc — Explore Ideas"
+    description={introduction}
+>
+    <section class="hero">
+        <p class="eyebrow">A SPACE FOR CURIOSITY</p>
+        <h1>About Knowledge But Beyond Knowledge.</h1>
+        <p class="intro">{introduction}</p>
+        <a class="explore" href="#explore">Explore by interests ↓</a>
+    </section>
+
+    <section id="explore" class="topics">
+        <p class="eyebrow">EXPLORE</p>
+        <h2>Three paths of discovery</h2>
+
+        <div class="topic-grid">
+            <a id="physics" class="topic" href="/physics/">
+                <div class="topic-figure">
+                    <img
+                        src="/images/physicscover.jpg"
+                        alt="Light dispersion through a prism."
+                    />
+
+                   <div class="topic-copy">
+                      <span class="number">01 / THE UNIVERSE</span>
+                      <h3>Physics</h3>
+                      <p>From the motion of falling objects to the structure of spacetime.</p>
+                   </div>
+               </div>                 
+            </a>
+
+            <a id="mathematics" class="topic" href="/mathematics/">
+                <div class="topic-figure">
+                    <img
+                        src="/images/mathcover.jpg"
+                        alt="Mathematical equations and expressions."
+                    />
+
+                    <div class="topic-copy">
+                      <span class="number">02 / PATTERNS & PROOF</span>
+                      <h3>Mathematics</h3>
+                      <p>Exploring elegant equations, rigorous proofs, and unexpected connections.</p>
+                   </div>
+                </div>   
+            </a>
+
+            <a id="philosophy" class="topic" href="/philosophy/">
+                <div class="topic-figure">
+                    <img
+                        src="/images/philosophycover.jpg"
+                        alt="The School of Athens by Raphael."
+                    />
+              
+                    <div class="topic-copy">
+
+                      <span class="number">03 / IDEAS & KNOWLEDGE</span>
+                      <h3>Philosophy</h3>
+                      <p>Questioning what we know, how we know it, and what reality might be.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section id="journal" class="journal">
+        <p class="eyebrow">THE JOURNAL</p>
+        <h2>Thoughts, questions & discoveries</h2>
+
+        <p class="journal-intro">
+            A collection of ideas explored across physics, mathematics, and philosophy.
+        </p>
+
+        <div class="journal-list">
+
+            <article class="journal-entry featured-entry">
+                <span class="number">01 / FEATURED</span>
+                <h3>Approximation of reality</h3>
+                <p>An exploration of things that challenge and reshape our intuition.</p>
+                <a href="#">Read article ↗</a>
+            </article>
+
+            <article class="journal-entry">
+                <span class="number">02 / MATHEMATICS</span>
+                <h3>Language of nature</h3>
+                <a href="#">Read article ↗</a>
+            </article>
+
+            <article class="journal-entry">
+                <span class="number">03 / PHILOSOPHY</span>
+                <h3>Collision of thoughts</h3>
+                <a href="#">Read article ↗</a>
+            </article>
+
+        </div>
+    </section>
+
+    <section class="note">
+        <p class="eyebrow">A PERSONAL NOTE</p>
+        <h2>Not just answers, but better questions.</h2>
+        <p>
+            This website is a growing collection of ideas, explanations,
+            thought experiments, and discoveries. Some ideas are established
+            science; others are questions still worth exploring.
+        </p>
+    </section>
+</SiteLayout>
