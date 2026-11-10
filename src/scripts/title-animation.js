@@ -112,23 +112,34 @@ const title = document.querySelector(".logo.animated-title");
 };
 
 // Theme switching
-const themeButton = document.querySelector("#theme-toggle");
+const themeOptions = document.querySelectorAll(".theme-option");
 
-// Check the current theme
-const isLightTheme = document.documentElement.classList.contains("light-theme");
+function updateThemeButtons() {
+    const currentTheme =
+        document.documentElement.classList.contains("light-theme")
+            ? "light"
+            : "dark";
 
-//Update button text if the button exists
-if (themeButton) {
-    themeButton.textContent = isLightTheme ? "Dark mode" : "Light mode";
-    
-    themeButton.addEventListener("click", ()=>{
-      document.documentElement.classList.toggle("light-theme");
-    
-    
-      const newIsLightTheme = document.documentElement.classList.contains("light-theme");
-    
-      localStorage.setItem("theme", newIsLightTheme ? "light" : "dark");
+    themeOptions.forEach((button) => {
+        const isActive = button.dataset.theme === currentTheme;
 
-      themeButton.textContent = newIsLightTheme ? "Dark mode" : "Light mode";
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
     });
 }
+
+themeOptions.forEach((button) => {
+    button.addEventListener("click", () => {
+        const selectedTheme = button.dataset.theme;
+        const isLight = selectedTheme === "light";
+
+        document.documentElement.classList.toggle("light-theme", isLight);
+
+        localStorage.setItem("theme", selectedTheme);
+
+        updateThemeButtons();
+    });
+});
+
+// Set the correct selected state when Settings opens
+updateThemeButtons();

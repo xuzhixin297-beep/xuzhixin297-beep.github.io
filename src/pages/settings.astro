@@ -24,9 +24,31 @@ import SiteLayout from "../layouts/SiteLayout.astro";
             <p>Choose the preferred theme for the website.</p>
           </div>
 
-          <button id="theme-toggle" class="theme-toggle" type="button">
-            Light mode
-          </button>
+          <div class="theme-options">
+            <button
+               class="theme-option light-option"
+               data-theme="light"
+               type="button"
+               aria-pressed="false"
+            >
+              <span class="theme-preview light-preview">
+               <span class="theme-icon" aria-hidden="true">☀</span>
+              </span>
+              <span class="theme-option-label">Light</span>
+            </button>
+
+            <button
+              class="theme-option dark-option"
+              data-theme="dark"
+              type="button"
+              aria-pressed="false"
+            >
+              <span class="theme-preview dark-preview">
+               <span class="theme-icon" aria-hidden="true">☾</span>
+              </span>
+              <span class="theme-option-label">Dark</span>
+            </button>
+         </div>
         </section>
     </main>
 </SiteLayout>
