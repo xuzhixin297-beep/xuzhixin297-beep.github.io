@@ -80,7 +80,7 @@
     MAIN NAVIGATION
  ================================= */
 
- nav[aria-label="Main navigation"] {
+ .main-navigation {
      display: flex;
      align-items: center;
      gap: 28px;
@@ -88,7 +88,7 @@
 
  /* Main navigation links: Home and subjects */
 
-nav[aria-label="Main navigation"] > a,
+.main-navigation > a,
 .nav-trigger {
     position: relative;
     display: inline-block;
@@ -105,14 +105,14 @@ nav[aria-label="Main navigation"] > a,
     transition: color 0.2s ease;
 }
 
-nav[aria-label="Main navigation"] > a:hover,
+.main-navigation > a:hover,
 .nav-trigger:hover {
     color: var(--text-color);
 }
 
 /* Animated underline */
 
-nav[aria-label="Main navigation"] > a::after,
+.main-navigation > a::after,
 .nav-trigger::after {
     content: "";
     position: absolute;
@@ -126,9 +126,9 @@ nav[aria-label="Main navigation"] > a::after,
     transition: transform 0.25s ease;
 }
 
-nav[aria-label="Main navigation"] > a:hover::after,
+.main-navigation > a:hover::after,
 .nav-trigger:hover::after,
-nav[aria-label="Main navigation"] > a:focus-visible::after,
+.main-navigation > a:focus-visible::after,
 .nav-trigger:focus-visible::after {
     transform: scaleX(1);
 }
@@ -211,7 +211,7 @@ nav[aria-label="Main navigation"] > a:focus-visible::after,
  ================================= */
 
  @media (max-width: 700px) {
-     nav[aria-label="Main navigation"] {
+     .main-navigation {
          flex-wrap: wrap;
          gap: 16px;
      }
@@ -757,6 +757,12 @@ nav a:focus-visible::after {
   }
 }
 
+/* Settings */
+.setting_link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 
 /* ============================= */
 /* PHYSICS OVERVIEW PAGE */

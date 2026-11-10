@@ -114,14 +114,21 @@ const title = document.querySelector(".logo.animated-title");
 // Theme switching
 const themeButton = document.querySelector("#theme-toggle");
 
-themeButton.addEventListener("click", () => {
-    document.documentElement.classList.toggle("light-theme");
-    const isLightTheme = document.documentElement.classList.contains("light-theme");
-    localStorage.setItem("theme", isLightTheme ? "light" : "dark");
+// Check the current theme
+const isLightTheme = document.documentElement.classList.contains("light-theme");
 
-if (isLightTheme) {
-    themeButton.textContent = "Dark mode";
-} else {
-    themeButton.textContent = "Light mode";
+//Update button text if the button exists
+if (themeButton) {
+    themeButton.textContent = isLightTheme ? "Dark mode" : "Light mode";
+    
+    themeButton.addEventListener("click", ()=>{
+      document.documentElement.classList.toggle("light-theme");
+    
+    
+      const newIsLightTheme = document.documentElement.classList.contains("light-theme");
+    
+      localStorage.setItem("theme", newIsLightTheme ? "light" : "dark");
+
+      themeButton.textContent = newIsLightTheme ? "Dark mode" : "Light mode";
+    });
 }
-});

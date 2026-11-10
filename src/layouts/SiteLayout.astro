@@ -36,7 +36,7 @@ const {
     <body>
         <header class="topbar">
 
-            <div class="logo animated-title" aria-label="Antemundane sprǣc">
+            <div class="logo animated-title" aria-label="Antemundane sprǣc" translate="no">
                 <span>Ant</span>
 
                 <button
@@ -66,7 +66,7 @@ const {
                 </span>
             </div>
 
-            <nav aria-label="Main navigation">
+            <nav class="main-navigation" aria-label="Main navigation">
                 <a href="/">Home</a>
 
                 <div class="nav-dropdown">
@@ -103,9 +103,10 @@ const {
 
                 <a href="/journal/">Journal</a>
 
-                <button id="theme-toggle" class="theme-toggle" type="button">
-                    Light mode
-                </button>
+                <a href="/settings/" class="settings-link" aria-label="Settings">
+                  <span aria-hidden="true">⚙</span>
+                  <span>Settings</span>
+                </a>
             </nav>
         </header>
 
@@ -118,5 +119,20 @@ const {
         </footer>
 
         <script src="../scripts/title-animation.js"></script>
+
+        <script is: inline>
+          window.gtranslateSettings = {
+            "default_language": "en",
+            "native_language_names": true,
+            "languages": ["en", "zh-CN"],
+            "wrapper_selector": ".gtranslate_wrapper"
+          };
+        </script>
+
+        <script
+          is:inline
+          src="https://cdn.gtranslate.net/widgets/latest/dropdown.js"
+          defer
+        ></script>          
     </body>
 </html>
