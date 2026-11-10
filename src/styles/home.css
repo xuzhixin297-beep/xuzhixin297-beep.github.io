@@ -758,12 +758,67 @@ nav a:focus-visible::after {
 }
 
 /* Settings */
-.setting_link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.setting-page {
+   width: min(900px, 90%);
+   margin: 60px auto;
 }
 
+.setting-header {
+   margin-bottom: 40px;
+}
+
+.setting-header h1 {
+    margin-bottom: 12px;
+}
+
+.setting-header p {
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.settings-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  padding: 28px 30px;
+  margin-bottom: 22px;
+
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+
+  transition: border-color 0.2s ease,
+              transform 0.2s ease; 
+}
+
+.settings-card:hover {
+  transform: translateY(-2px);
+}
+
+.settings-description h2 {
+   margin: 0 0 8px;
+}
+
+.settings-description p {
+   margin: 0;
+   color: var(--text-color);
+   opacity: 0.7;
+}
+
+.theme-settings .theme-toggle {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .settings-card {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px;
+  }
+}
+  
 /* ============================= */
 /* PHYSICS OVERVIEW PAGE */
 /* ============================= */
