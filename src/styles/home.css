@@ -993,13 +993,13 @@ nav a:focus-visible::after {
     line-height: 1.8;
 }
 
-.physics-branches {
+.subject-branches {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
 }
 
-.physics-branch {
+.subject-branch {
     display: block;
     padding: 30px;
     color: var(--text-color);
@@ -1012,7 +1012,7 @@ nav a:focus-visible::after {
                 background 0.25s ease;
 }
 
-.physics-branch:hover {
+.subject-branch:hover {
     transform: translateY(-5px);
     border-color: var(--accent-color);
     background: var(--section-background);
@@ -1024,14 +1024,14 @@ nav a:focus-visible::after {
     letter-spacing: 0.1em;
 }
 
-.physics-branch h3 {
+.subject-branch h3 {
     font-family: "Source Serif 4", serif;
     font-size: 1.6rem;
     font-weight: 500;
     margin: 20px 0 12px;
 }
 
-.physics-branch p {
+.subject-branch p {
     color: var(--secondary-text);
     line-height: 1.8;
     min-height: 55px;
@@ -1051,11 +1051,85 @@ nav a:focus-visible::after {
 }
 
 @media (max-width: 700px) {
-    .physics-branches {
+    .subject-branches {
         grid-template-columns: 1fr;
     }
 
     .subject-hero {
         padding: 70px 7% 60px;
     }
+}
+
+/* Subject pages */
+
+.subject-page {
+    width: min(1000px, 90%);
+    margin: 60px auto;
+}
+
+.subject-header {
+    margin-bottom: 48px;
+}
+
+.subject-header h1 {
+    margin-bottom: 14px;
+}
+
+.subject-header p {
+    color: var(--text-color);
+    opacity: 0.75;
+    line-height: 1.7;
+}
+
+.subject-introduction {
+    padding: 28px 30px;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.subject-introduction h2 {
+    margin-top: 0;
+}
+
+.subject-introduction p {
+    line-height: 1.8;
+}
+
+
+/* Shared subject subpages */
+
+.subject-subpage {
+    width: min(1000px, 90%);
+    margin: 0 auto 70px;
+}
+
+.subject-subpage-content {
+    margin-top: 48px;
+    padding: 30px;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.subject-subpage-content h2 {
+    margin-top: 12px;
+    margin-bottom: 18px;
+}
+
+.subject-subpage-content p {
+    line-height: 1.8;
+}
+
+.subpage-back-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: var(--text-color);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.subpage-back-link:hover {
+    opacity: 1;
 }

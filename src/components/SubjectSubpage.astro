@@ -1,0 +1,59 @@
+
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+interface Props {
+    subject: string;
+    title: string;
+    eyebrow: string;
+    introduction: string;
+    description: string;
+}
+
+const {
+    subject,
+    title,
+    eyebrow,
+    introduction,
+    description
+} = Astro.props;
+---
+
+<SiteLayout
+    title={`${title} — ${subject} — Antemundane sprǣc`}
+    description={description}
+>
+    <main class="subject-subpage">
+        <section class="subject-hero">
+            <p class="eyebrow">{eyebrow}</p>
+
+            <h1>{title}</h1>
+
+            <p class="subject-introduction">
+                {introduction}
+            </p>
+
+            <p class="subject-secondary">
+                Question. Explore. Discover.
+            </p>
+        </section>
+
+        <section class="subject-subpage-content">
+            <p class="eyebrow">UNDER CONSTRUCTION</p>
+
+            <h2>A space for exploration</h2>
+
+            <p>{description}</p>
+
+            <p>
+                This section is being prepared. More articles,
+                discussions, and interactive experiences will
+                appear here in the future.
+            </p>
+
+            <a class="subpage-back-link" href={`/${subject.toLowerCase()}/`}>
+                ← Back to {subject}
+            </a>
+        </section>
+    </main>
+</SiteLayout>
