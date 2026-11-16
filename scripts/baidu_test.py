@@ -13,7 +13,11 @@ secret_key = os.environ["BAIDU_SECRET_KEY"]
 
 
 # 2. Prepare the sentence
-text = "The cycloid is a remarkable mathematical curve."
+text = (
+    "The cycloid is the curve traced by a fixed point "
+    "on the circumference of a circle as it rolls "
+    "along a straight line without slipping."
+)
 
 # 3. Generate a unique random value
 salt = secrets.token_hex(8)
