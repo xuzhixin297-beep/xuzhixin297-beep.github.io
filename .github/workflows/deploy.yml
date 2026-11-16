@@ -20,6 +20,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Test Baidu Translation API
+        env:
+          BAIDU_APP_ID: ${{ secrets.BAIDU_APP_ID }}
+          BAIDU_SECRET_KEY: ${{ secrets.BAIDU_SECRET_KEY }}
+        run: python3 scripts/baidu_test.py
+        
       - name: Build Astro website
         uses: withastro/action@v6
 

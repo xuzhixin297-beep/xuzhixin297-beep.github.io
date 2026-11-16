@@ -1,0 +1,46 @@
+
+---
+import { getCollection, render } from 'astro:content';
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+
+export async function getStaticPaths() {
+    const articles = await getCollection('articles');
+
+    return articles.map((article) => ({
+        params: {
+            id: article.id,
+        },
+        props: {
+            article,
+        },
+    }));
+}
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+---
+
+<SiteLayout
+    title={`${article.data.title} — Antemundane sprǣc`}
+    description={article.data.description}
+>
+    <main class="article-page">
+        <article>
+            <header class="article-header">
+                <p class="eyebrow">JOURNAL · ESSAYS</p>
+
+                <h1>{article.data.title}</h1>
+
+                <p>{article.data.description}</p>
+
+                <p>
+                    Published: {article.data.pubDate.toLocaleDateString()}
+                </p>
+            </header>
+
+            <div class="article-content">
+                <Content />
+            </div>
+        </article>
+    </main>
+</SiteLayout>
