@@ -17,37 +17,52 @@ if not APP_ID or not SECRET_KEY:
 # 1. Separate YAML frontmatter from Markdown body
 # --------------------------------------------------
 
+
 def split_frontmatter(markdown):
     """
-    Separate YAML frontmatter from the article body.
+    Separate YAML frontmatter from the Markdown body.
+
+    Recognizes opening and closing delimiters even when
+    the file uses Windows (CRLF) or Unix (LF) line endings.
     """
 
-    # Remove a possible UTF-8 BOM before checking the opening delimiter.
-    has_bom = markdown.startswith("\ufeff")
-    if has_bom:
+    # Remove a possible UTF-8 BOM.
+    if markdown.startswith("\ufeff"):
         markdown = markdown[1:]
 
-    pattern = r"\A(---\r?\n.*?\r?\n---(?:\r?\n|$))(.*)\Z"
+    # Keep original line endings.
+    lines = markdown.splitlines(keepends=True)
 
-    match = re.match(
-        pattern,
-        markdown,
-        flags=re.DOTALL
-    )
+    # Find the first non-empty line.
+    opening_index = None
 
-    if match:
-        frontmatter = match.group(1)
-        body = match.group(2)
+    for index, line in enumerate(lines):
+        if line.strip():
+            opening_index = index
+            break
 
-        if has_bom:
-            frontmatter = "\ufeff" + frontmatter
+    # No opening delimiter found.
+    if opening_index is None or lines[opening_index].strip() != "---":
+        return "", markdown
 
-        return frontmatter, body
+    # Find the closing delimiter.
+    closing_index = None
 
-    if has_bom:
-        markdown = "\ufeff" + markdown
+    for index in range(opening_index + 1, len(lines)):
+        if lines[index].strip() == "---":
+            closing_index = index
+            break
 
-    return "", markdown
+    # No closing delimiter found.
+    if closing_index is None:
+        return "", markdown
+
+    # Preserve the original frontmatter and body.
+    frontmatter = "".join(lines[:closing_index + 1])
+    body = "".join(lines[closing_index + 1:])
+
+    return frontmatter, body
+
 
 
 # --------------------------------------------------
