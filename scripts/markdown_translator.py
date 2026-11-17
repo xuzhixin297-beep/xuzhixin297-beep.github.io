@@ -107,9 +107,11 @@ def protect_blocks(markdown):
 # 3. Protect inline Markdown content
 # --------------------------------------------------
 
+
 def protect_inline_content(markdown):
     """
-    Protect inline math, inline code, and URLs.
+    Protect inline math, inline code, URLs, and Markdown
+    structural markers.
 
     Returns:
         protected_markdown: Text containing placeholders.
@@ -119,13 +121,14 @@ def protect_inline_content(markdown):
     protected_items = []
 
     pattern = re.compile(
-    r"\\\(.*?\\\)"                  # Inline math: \( ... \)
-    r"|\\\[.*?\\\]"                 # Math delimiters: \[ ... \]
-    r"|`[^`\n]+`"                    # Inline code
-    r"|https?://[^\s)\]]+"          # URLs
-    r"|(?m)^#{1,6}[ \t]+"           # Markdown headings
-    r"|(?m)^[ \t]*(?:[-*+]|\d+[.)])[ \t]+"  # Lists
-    r"|(?m)^>[ \t]?"                # Blockquotes
+        r"\\\(.*?\\\)"                  # Inline math: \( ... \)
+        r"|\\\[.*?\\\]"                 # Math delimiters: \[ ... \]
+        r"|`[^`\n]+`"                    # Inline code
+        r"|https?://[^\s)\]]+"          # URLs
+        r"|^#{1,6}[ \t]+"               # Markdown headings
+        r"^[ \t]*(?:[-*+]|\d+[.)])[ \t]+"  # Lists
+        r"^>[ \t]?",                    # Blockquotes
+        flags=re.MULTILINE
     )
 
     def replace_item(match):
@@ -142,6 +145,7 @@ def protect_inline_content(markdown):
     )
 
     return protected_markdown, protected_items
+
 
 
 # --------------------------------------------------
