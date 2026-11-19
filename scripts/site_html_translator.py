@@ -64,17 +64,36 @@ def make_cache_key(text, tag):
 
 
 def get_cached_translation(cache, text, tag):
-    return cache.get(make_cache_key(text, tag))
+    # First: exact match for the current HTML tag.
+    exact_key = make_cache_key(text, tag)
+
+    if exact_key in cache:
+        return cache[exact_key]
+
+    # Second: reuse a generic text translation.
+    generic_key = make_cache_key(text, "text")
+
+    if generic_key in cache:
+        return cache[generic_key]
+
+    return None
 
 
 def get_override(overrides, text, tag):
-    # 1. Exact tag-specific override
+    # First: look for an exact tag-specific override.
     exact_key = make_cache_key(text, tag)
 
     if exact_key in overrides:
         return overrides[exact_key]
 
-    # 2. Generic text override
+    # Second: allow the existing "text" override to apply
+    # regardless of whether the HTML tag is a, p, h1, span, etc.
+    generic_key = make_cache_key(text, "text")
+
+    if generic_key in overrides:
+        return overrides[generic_key]
+
+    # Third: allow a simple English-text key as well.
     if text in overrides:
         return overrides[text]
 
@@ -236,18 +255,28 @@ def translate_html(source, cache, overrides):
         # Decode HTML entities before translation.
         text = html.unescape(core)
 
-        category = classify_text(text, tag)
+        # Manual overrides must always have the highest priority,
+        # even for text normally marked PRESERVE or REVIEW.
+        overridden = get_override(overrides, text, tag)
+
+        if overridden is not None:
+          translated = overridden
+          print(f"[OVERRIDE] {text}")
+
+        else:
+          category = classify_text(text, tag)
 
         if category != "TRANSLATE":
-            translated = text
-            print(f"[{category}] {text}")
+          translated = text
+          print(f"[{category}] {text}")
+
         else:
-            translated = translate_cached(
-                cache,
-                overrides,
-                text,
-                tag
-            )
+          translated = translate_cached(
+              cache,
+              overrides,
+              text,
+              tag
+        )
 
         # Escape translated text so it cannot accidentally become HTML.
         translated_html = html.escape(translated, quote=False)
@@ -378,7 +407,14 @@ def main():
         )
 
     cache = load_cache()
+
+    print(f"[INFO] Loaded {len(cache)} cached translations")
+    print(f"[INFO] Cache file: {CACHE_PATH.resolve()}")
+    
     overrides = load_overrides()
+
+    print(f"[INFO] Loaded {len(overrides)} manual overrides")
+    print(f"[INFO] Override file: {OVERRIDE_PATH.resolve()}")
 
     english_pages = find_english_html_files()
 
