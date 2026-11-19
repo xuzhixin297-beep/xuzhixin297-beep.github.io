@@ -80,7 +80,8 @@ def get_cached_translation(cache, text, tag):
 
 
 def get_override(overrides, text, tag):
-    # 1. Exact HTML-tag override takes priority
+
+    # 1. Exact tag-specific override
     exact_key = make_cache_key(text, tag)
 
     if exact_key in overrides:
@@ -92,7 +93,7 @@ def get_override(overrides, text, tag):
     if generic_key in overrides:
         return overrides[generic_key]
 
-    # 3. Plain-text key (optional)
+    # 3. Legacy plain-text key
     if text in overrides:
         return overrides[text]
 
