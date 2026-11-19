@@ -435,7 +435,7 @@
 .logo.animated-title {
   position: relative;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   white-space: nowrap;
   cursor: default;
 }
@@ -592,8 +592,31 @@
   font-size: 1.05em;
 }
 
-/* Cinematic title animation */
+/* Website logo */
+.site-logo {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 
+/* Default: dark-mode logo */
+.logo-day {
+  display: none;
+}
+
+.logo-night {
+  display: inline-block;
+}
+
+/* Light mode: show the dark logo */
+.light-theme .logo-day {
+  display: inline-block;
+}
+
+.light-theme .logo-night {
+  display: none;
+}
 
 /* Dark overlay behind the centered title */
 .cinematic-backdrop {
