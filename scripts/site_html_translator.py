@@ -80,20 +80,19 @@ def get_cached_translation(cache, text, tag):
 
 
 def get_override(overrides, text, tag):
-    # First: look for an exact tag-specific override.
+    # 1. Exact HTML-tag override takes priority
     exact_key = make_cache_key(text, tag)
 
     if exact_key in overrides:
         return overrides[exact_key]
 
-    # Second: allow the existing "text" override to apply
-    # regardless of whether the HTML tag is a, p, h1, span, etc.
+    # 2. Universal text override
     generic_key = make_cache_key(text, "text")
 
     if generic_key in overrides:
         return overrides[generic_key]
 
-    # Third: allow a simple English-text key as well.
+    # 3. Plain-text key (optional)
     if text in overrides:
         return overrides[text]
 
