@@ -1,6 +1,10 @@
 
 ---
 import "../styles/home.css";
+import { getLocale, getUiText } from '../i18n/ui';
+
+const locale = getLocale(Astro.url.pathname);
+const t = getUiText(locale);
 
 const {
     title = "Antemundane sprǣc — Explore Ideas",
@@ -9,7 +13,7 @@ const {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={locale}>
     <head>
         <script is:inline>
             const savedTheme = localStorage.getItem("theme");
@@ -67,53 +71,53 @@ const {
             </div>
 
             <nav class="main-navigation" aria-label="Main navigation">
-                <a href="/">Home</a>
+                <a href="/">{t.home}</a>
 
                 <div class="nav-dropdown">
-                    <a href="/physics/" class="nav-trigger">Physics</a>
+                    <a href="/physics/" class="nav-trigger">{t.physics}</a>
                     <div class="dropdown-menu">
-                        <a href="/physics/">Overview</a>
-                        <a href="/physics/forum/">Forum</a>
-                        <a href="/physics/interesting-topics/">Interesting topics</a>
-                        <a href="/physics/experiments/">Experiments & simulations</a>
-                        <a href="/physics/games/">Fun games</a>
+                        <a href="/physics/">{t.physicsOverview}</a>
+                        <a href="/physics/forum/">{t.physicsForum}</a>
+                        <a href="/physics/interesting-topics/">{t.physicsTopics}</a>
+                        <a href="/physics/experiments/">{t.physicsSimulations}</a>
+                        <a href="/physics/games/">{t.physicsGames}</a>
                     </div>
                 </div>
 
                 <div class="nav-dropdown">
-                    <a href="/mathematics/" class="nav-trigger">Mathematics</a>
+                    <a href="/mathematics/" class="nav-trigger">{t.mathematics}</a>
                     <div class="dropdown-menu">
-                        <a href="/mathematics/">Overview</a>
-                        <a href="/mathematics/forum/">Forum</a>
-                        <a href="/mathematics/interesting-topics/">Interesting topics</a>
-                        <a href="/mathematics/games/">Fun games</a>
+                        <a href="/mathematics/">{t.mathematicsOverview}</a>
+                        <a href="/mathematics/forum/">{t.mathematicsForum}</a>
+                        <a href="/mathematics/interesting-topics/">{t.mathematicsTopics}</a>
+                        <a href="/mathematics/games/">{t.mathematicsGames}</a>
                     </div>
                 </div>
 
                 <div class="nav-dropdown">
-                    <a href="/philosophy/" class="nav-trigger">Philosophy</a>
+                    <a href="/philosophy/" class="nav-trigger">{t.philosophy}</a>
                     <div class="dropdown-menu">
-                        <a href="/philosophy/">Overview</a>
-                        <a href="/philosophy/forum/">Forum</a>
-                        <a href="/philosophy/epistemology/">Epistemology</a>
-                        <a href="/philosophy/religion/">Religion</a>
-                        <a href="/philosophy/games/">Fun games</a>
+                        <a href="/philosophy/">{t.philosophyOverview}</a>
+                        <a href="/philosophy/forum/">{t.philosophyForum}</a>
+                        <a href="/philosophy/epistemology/">{t.epistemology}</a>
+                        <a href="/philosophy/religion/">{t.religion}</a>
+                        <a href="/philosophy/games/">{t.philosophyGames}</a>
                     </div>
                 </div>
 
                 <div class="nav-dropdown">
-                  <a href="/journal/" class="nav-trigger">Journal</a>
+                  <a href="/journal/" class="nav-trigger">{t.journal}</a>
                   <div class="dropdown-menu">
-                    <a href="/journal/">Overview</a>
-                    <a href="/journal/essays/">Essays</a>
-                    <a href="/journal/questions/">Questions</a>
-                    <a href="/journal/reflections/">Reflections</a>
+                    <a href="/journal/">{t.journalOverview}</a>
+                    <a href="/journal/essays/">{t.essays}</a>
+                    <a href="/journal/questions/">{t.questions}</a>
+                    <a href="/journal/reflections/">{t.reflections}</a>
                   </div>
                 </div>
 
                 <a href="/settings/" class="settings-link" aria-label="Settings">
                   <span aria-hidden="true">⚙</span>
-                  <span>Settings</span>
+                  <span>{t.settings}</span>
                 </a>
             </nav>
         </header>
@@ -123,7 +127,7 @@ const {
         </main>
 
         <footer>
-            <p>Built with curiosity. Powered by learning.</p>
+            <p>{t.footer}</p>
         </footer>
 
         <script src="../scripts/title-animation.js"></script>

@@ -17,6 +17,8 @@ API_URL = "https://fanyi-api.baidu.com/api/trans/vip/translate"
 
 MAX_CHARS = 900
 REQUEST_INTERVAL = 1.1
+MAX_RETRIES = 4
+RETRY_DELAY = 3
 
 
 # --------------------------------------------------
@@ -133,25 +135,81 @@ def translate_chunk(text):
 
     _last_request_time = time.monotonic()
 
-    try:
-        with urllib.request.urlopen(
-            request,
-            timeout=30
-        ) as response:
+    result = None
 
-            result = json.loads(
-                response.read().decode("utf-8")
+    for attempt in range(1, MAX_RETRIES + 1):
+
+        try:
+            with urllib.request.urlopen(
+                request,
+                timeout=30
+            ) as response:
+
+                result = json.loads(
+                    response.read().decode("utf-8")
+                )
+
+            # Request succeeded.
+            break
+
+        except urllib.error.HTTPError as error:
+
+            # Retry temporary server errors or rate limiting.
+            retryable = (
+                error.code == 429
+                or 500 <= error.code <= 599
             )
 
-    except urllib.error.HTTPError as error:
-        raise RuntimeError(
-            f"Baidu HTTP error: {error.code}"
-        ) from error
+            if not retryable or attempt == MAX_RETRIES:
+                raise RuntimeError(
+                    f"Baidu HTTP error: {error.code}"
+                ) from error
 
-    except urllib.error.URLError as error:
-        raise RuntimeError(
-            f"Could not connect to Baidu: {error.reason}"
-        ) from error
+            wait_time = RETRY_DELAY * (2 ** (attempt - 1))
+
+            print(
+                f"HTTP {error.code}. "
+                f"Retry {attempt}/{MAX_RETRIES - 1} "
+                f"in {wait_time} seconds..."
+            )
+
+            time.sleep(wait_time)
+
+        except urllib.error.URLError as error:
+
+            if attempt == MAX_RETRIES:
+                raise RuntimeError(
+                    f"Could not connect to Baidu after "
+                    f"{MAX_RETRIES} attempts: {error.reason}"
+                ) from error
+
+            wait_time = RETRY_DELAY * (2 ** (attempt - 1))
+
+            print(
+                f"Connection failed. "
+                f"Retry {attempt}/{MAX_RETRIES - 1} "
+                f"in {wait_time} seconds..."
+            )
+
+            time.sleep(wait_time)
+
+        except TimeoutError as error:
+
+            if attempt == MAX_RETRIES:
+                raise RuntimeError(
+                    f"Request timed out after "
+                    f"{MAX_RETRIES} attempts."
+                ) from error
+
+            wait_time = RETRY_DELAY * (2 ** (attempt - 1))
+
+            print(
+                f"Request timed out. "
+                f"Retry {attempt}/{MAX_RETRIES - 1} "
+                f"in {wait_time} seconds..."
+            )
+
+            time.sleep(wait_time)
 
     if "error_code" in result:
         raise RuntimeError(

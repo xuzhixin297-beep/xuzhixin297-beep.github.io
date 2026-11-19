@@ -1,8 +1,20 @@
 
 import re
-from translator import translate_text
 import os
+import json
+import hashlib
+
 from pathlib import Path
+from translator import translate_text
+
+# --------------------------------------------------
+# Configuration
+# --------------------------------------------------
+
+CONTENT_DIRECTORY = Path("src/content/articles")
+CHINESE_DIRECTORY = CONTENT_DIRECTORY / "zh-cn"
+
+MANIFEST_PATH = Path("scripts/translation-manifest.json")
 
 APP_ID = os.environ.get("BAIDU_APP_ID")
 SECRET_KEY = os.environ.get("BAIDU_SECRET_KEY")
@@ -12,6 +24,92 @@ if not APP_ID or not SECRET_KEY:
         "Missing Baidu credentials. "
         "Check BAIDU_APP_ID and BAIDU_SECRET_KEY."
     )
+
+# --------------------------------------------------
+# Discover English Markdown articles
+# --------------------------------------------------
+
+def discover_articles():
+    """
+    Find all English Markdown articles recursively.
+
+    Chinese translations are excluded.
+    """
+
+    articles = []
+
+    for path in CONTENT_DIRECTORY.rglob("*.md"):
+
+        # Ignore files inside the Chinese translation directory.
+        if CHINESE_DIRECTORY in path.parents:
+            continue
+
+        articles.append(path)
+
+    return sorted(articles)
+
+
+# --------------------------------------------------
+# Calculate source fingerprints
+# --------------------------------------------------
+
+def calculate_hash(file_path):
+    """
+    Calculate the SHA-256 fingerprint of a file.
+    """
+
+    with open(file_path, "rb") as file:
+        content = file.read()
+
+    return hashlib.sha256(content).hexdigest()
+
+# --------------------------------------------------
+# Translation manifest
+# --------------------------------------------------
+
+def load_manifest():
+    """
+    Load the translation history.
+
+    Return an empty dictionary if no manifest exists yet.
+    """
+
+    if not MANIFEST_PATH.exists():
+        return {}
+
+    with open(
+        MANIFEST_PATH,
+        "r",
+        encoding="utf-8"
+    ) as file:
+        return json.load(file)
+
+
+def save_manifest(manifest):
+    """
+    Save the translation history safely.
+    """
+
+    MANIFEST_PATH.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    temporary_path = MANIFEST_PATH.with_suffix(".tmp")
+
+    with open(
+        temporary_path,
+        "w",
+        encoding="utf-8"
+    ) as file:
+        json.dump(
+            manifest,
+            file,
+            ensure_ascii=False,
+            indent=4
+        )
+
+    temporary_path.replace(MANIFEST_PATH)
 
 # --------------------------------------------------
 # 1. Separate YAML frontmatter from Markdown body
@@ -236,15 +334,22 @@ def translate_markdown(markdown):
 
 def save_translated_markdown(translated_markdown, input_path):
     """
-    Save the translated article in the zh-cn content directory.
+    Save the translated article while preserving
+    its original directory structure.
     """
 
     input_path = Path(input_path)
 
-    output_directory = Path("src/content/articles/zh-cn")
-    output_directory.mkdir(parents=True, exist_ok=True)
+    relative_path = input_path.relative_to(
+        CONTENT_DIRECTORY
+    )
 
-    output_path = output_directory / input_path.name
+    output_path = CHINESE_DIRECTORY / relative_path
+
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     with open(
         output_path,
@@ -253,42 +358,90 @@ def save_translated_markdown(translated_markdown, input_path):
     ) as file:
         file.write(translated_markdown)
 
-    print(f"\nChinese article saved to: {output_path}")
+    print(f"Chinese article saved to: {output_path}")
 
     return output_path
-
 # --------------------------------------------------
 # 6. Run a real translation test
 # --------------------------------------------------
 
+# --------------------------------------------------
+# Main translation process
+# --------------------------------------------------
+
 if __name__ == "__main__":
 
-    input_path = "src/content/articles/cycloid.md"
+    articles = discover_articles()
+    manifest = load_manifest()
 
-    with open(
-        input_path,
-        "r",
-        encoding="utf-8-sig"
-    ) as file:
-        original_markdown = file.read()
+    print(f"Discovered {len(articles)} English article(s).")
 
-    print("Reading:", input_path)
-    print("\nStarting Markdown translation...\n")
+    translated_count = 0
+    skipped_count = 0
 
-    frontmatter, body = split_frontmatter(original_markdown)
+    for input_path in articles:
 
-    if not frontmatter:
-        raise RuntimeError(
-            "Could not recognize YAML frontmatter. "
-            "Translation cancelled to protect the article."
+        relative_path = input_path.relative_to(
+            CONTENT_DIRECTORY
+        ).as_posix()
+
+        current_hash = calculate_hash(input_path)
+
+        output_path = CHINESE_DIRECTORY / relative_path
+
+        previous_record = manifest.get(relative_path, {})
+
+        previous_hash = previous_record.get("source_hash")
+
+        # Skip translation only if the source is unchanged
+        # AND the Chinese output still exists.
+        if (
+            current_hash == previous_hash
+            and output_path.exists()
+        ):
+            print(f"Skipping unchanged article: {relative_path}")
+            skipped_count += 1
+            continue
+
+        print(f"\nTranslating: {relative_path}")
+
+        with open(
+            input_path,
+            "r",
+            encoding="utf-8-sig"
+        ) as file:
+            original_markdown = file.read()
+
+        frontmatter, body = split_frontmatter(original_markdown)
+
+        if not frontmatter:
+            raise RuntimeError(
+                f"Invalid YAML frontmatter: {relative_path}"
+            )
+
+        translated_markdown = translate_markdown(
+            original_markdown
         )
 
-    translated_markdown = translate_markdown(original_markdown)
+        save_translated_markdown(
+            translated_markdown,
+            input_path
+        )
 
-    output_path = save_translated_markdown(
-        translated_markdown,
-        input_path
-    )
+        # Update the manifest only after translation succeeds.
+        manifest[relative_path] = {
+            "source_hash": current_hash,
+            "translated_file": (
+                CHINESE_DIRECTORY / relative_path
+            ).as_posix()
+        }
 
-    print("\nTranslation completed successfully!")
-    print("Output:", output_path)
+        save_manifest(manifest)
+
+        translated_count += 1
+
+    print("\n--------------------------------")
+    print("Translation process completed.")
+    print(f"New or updated: {translated_count}")
+    print(f"Unchanged: {skipped_count}")
+    print("--------------------------------")
