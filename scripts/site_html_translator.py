@@ -111,11 +111,32 @@ def classify_text(text, tag):
     if re.match(r"^\d+\s*/\s*", text):
         return "REVIEW"
 
-    if "Antemundane sprǣc" in text:
-        return "REVIEW"
-
     return "TRANSLATE"
 
+def translate_preserving_brand(text):
+    brand_pattern = re.compile(
+        r"Antemundane\s+(?:sprǣc|sprac)",
+        re.IGNORECASE
+    )
+
+    protected_names = []
+
+    def protect_brand(match):
+        placeholder = f"ZXQBRANDTOKEN{len(protected_names)}QXZ"
+        protected_names.append((placeholder, match.group(0)))
+        return placeholder
+
+    # Replace the brand name with a temporary token.
+    protected_text = brand_pattern.sub(protect_brand, text)
+
+    # Translate the remaining sentence using the existing Baidu translator.
+    translated = translate_text(protected_text)
+
+    # Restore the original brand name.
+    for placeholder, original_name in protected_names:
+        translated = translated.replace(placeholder, original_name)
+
+    return translated
 
 def translate_cached(cache, overrides, text, tag):
     # Manual override has highest priority.
@@ -135,7 +156,7 @@ def translate_cached(cache, overrides, text, tag):
     # Only genuinely new text reaches Baidu.
     print(f"[BAIDU] {text}")
 
-    translated = translate_text(text)
+    translated = translate_preserving_brand(text)
 
     store_translation(cache, text, tag, translated)
     save_cache(cache)
@@ -410,7 +431,7 @@ def main():
 
     print(f"[INFO] Loaded {len(cache)} cached translations")
     print(f"[INFO] Cache file: {CACHE_PATH.resolve()}")
-    
+
     overrides = load_overrides()
 
     print(f"[INFO] Loaded {len(overrides)} manual overrides")

@@ -1,4 +1,8 @@
 {
     "en|zh-CN|text|Home": "首页",
-    "en|zh-CN|text|Fun games": "趣味小游戏"
+    "en|zh-CN|a|Home": "首页",
+    "en|zh-CN|text|Fun games": "趣味小游戏",
+    "en|zh-CN|a|Fun games": "趣味小游戏",
+    "en|zh-CN|h1|Fun Games": "趣味小游戏",
+    "en|zh-CN|h3|Fun Games": "趣味小游戏"
 }
