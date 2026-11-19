@@ -276,28 +276,27 @@ def translate_html(source, cache, overrides):
         # Decode HTML entities before translation.
         text = html.unescape(core)
 
-        # Manual overrides must always have the highest priority,
-        # even for text normally marked PRESERVE or REVIEW.
+               # Manual overrides always have the highest priority.
         overridden = get_override(overrides, text, tag)
 
         if overridden is not None:
-          translated = overridden
-          print(f"[OVERRIDE] {text}")
+            translated = overridden
+            print(f"[OVERRIDE] {text}")
 
         else:
-          category = classify_text(text, tag)
+            category = classify_text(text, tag)
 
-        if category != "TRANSLATE":
-          translated = text
-          print(f"[{category}] {text}")
+            if category != "TRANSLATE":
+                translated = text
+                print(f"[{category}] {text}")
 
-        else:
-          translated = translate_cached(
-              cache,
-              overrides,
-              text,
-              tag
-        )
+            else:
+                translated = translate_cached(
+                    cache,
+                    overrides,
+                    text,
+                    tag
+                )
 
         # Escape translated text so it cannot accidentally become HTML.
         translated_html = html.escape(translated, quote=False)
