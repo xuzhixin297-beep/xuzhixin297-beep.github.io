@@ -9,14 +9,23 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         <p>Customize your experience on Antemundane sprǣc.</p>
       </header>
 
-        <section class="settings-card language-settings">
+        
+       <section class="settings-card language-settings">
           <div class="settings-description">
             <h2>Language</h2>
             <p>Choose your preferred language for the website.</p>
           </div>
 
-          <div class="gtranslate_wrapper"></div>
-        </section>
+          <div class="language-options">
+           <label for="site-language">Website language</label>
+
+           <select id="site-language">
+             <option value="en">English</option>
+             <option value="zh-cn">简体中文</option>
+           </select>
+          </div>
+       </section>
+
 
         <section class="settings-card theme-settings">
           <div class="settings-description">
@@ -52,3 +61,34 @@ import SiteLayout from "../layouts/SiteLayout.astro";
         </section>
     </main>
 </SiteLayout>
+
+<script is:inline>
+  const languageSelect = document.getElementById("site-language");
+
+  if (languageSelect) {
+    const currentPath = window.location.pathname;
+    const isChinese = currentPath.startsWith("/zh-cn/") ||
+                     currentPath === "/zh-cn";
+
+    languageSelect.value = isChinese ? "zh-cn" : "en";
+
+    languageSelect.addEventListener("change", () => {
+      const path = window.location.pathname;
+      const selectedLanguage = languageSelect.value;
+
+      if (selectedLanguage === "zh-cn") {
+        if (path === "/zh-cn" || path.startsWith("/zh-cn/")) {
+          return;
+        }
+
+        window.location.href = "/zh-cn" + path;
+      } else {
+        if (path === "/zh-cn") {
+          window.location.href = "/";
+        } else if (path.startsWith("/zh-cn/")) {
+          window.location.href = path.substring(6);
+        }
+      }
+    });
+  }
+</script>

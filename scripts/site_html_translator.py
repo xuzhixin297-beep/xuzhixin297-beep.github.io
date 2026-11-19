@@ -68,7 +68,17 @@ def get_cached_translation(cache, text, tag):
 
 
 def get_override(overrides, text, tag):
-    return overrides.get(make_cache_key(text, tag))
+    # 1. Exact tag-specific override
+    exact_key = make_cache_key(text, tag)
+
+    if exact_key in overrides:
+        return overrides[exact_key]
+
+    # 2. Generic text override
+    if text in overrides:
+        return overrides[text]
+
+    return None
 
 
 def store_translation(cache, text, tag, translated_text):
