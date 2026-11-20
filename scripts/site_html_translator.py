@@ -175,6 +175,7 @@ def translate_cached(cache, overrides, text, tag):
 # HTML text scanner
 # =========================
 
+
 class TextScanner(HTMLParser):
 
     def __init__(self, source):
@@ -196,66 +197,110 @@ class TextScanner(HTMLParser):
         line, column = self.getpos()
         return self.line_offsets[line - 1] + column
 
-    def scan_attributes(self, tag, attrs):
+    def scan_attributes(self, tag, raw_tag, start_offset, ignored):
+        if ignored or self.ignore_depth > 0:
+            return
+
+        # Start scanning immediately after the tag name.
+        tag_match = re.match(r"<\s*[^\s/>]+", raw_tag)
+
+        if not tag_match:
+            return
+
+        position = tag_match.end()
+
+        while position < len(raw_tag):
+
+            # Skip whitespace between attributes.
+            while position < len(raw_tag) and raw_tag[position].isspace():
+                position += 1
+
+            # End of tag.
+            if position >= len(raw_tag) or raw_tag[position] in "/>":
+                break
+
+            # Read the attribute name.
+            name_match = re.match(
+                r"[^\s=/>]+",
+                raw_tag[position:]
+            )
+
+            if not name_match:
+                position += 1
+                continue
+
+            attribute_name = name_match.group(0).lower()
+            position += name_match.end()
+
+            # Skip whitespace before '='.
+            while position < len(raw_tag) and raw_tag[position].isspace():
+                position += 1
+
+            # Attributes without values are not translatable.
+            if position >= len(raw_tag) or raw_tag[position] != "=":
+                continue
+
+            position += 1
+
+            # Skip whitespace after '='.
+            while position < len(raw_tag) and raw_tag[position].isspace():
+                position += 1
+
+            # Only translate quoted attribute values.
+            if position >= len(raw_tag) or raw_tag[position] not in "\"'":
+                # Skip an unquoted value safely.
+                while position < len(raw_tag) and not raw_tag[position].isspace() and raw_tag[position] != ">":
+                    position += 1
+                continue
+
+            quote = raw_tag[position]
+            position += 1
+
+            value_start = position
+
+            # Find the closing quote.
+            value_end = raw_tag.find(quote, value_start)
+
+            if value_end == -1:
+                break
+
+            raw_value = raw_tag[value_start:value_end]
+
+            # Only translate user-facing attributes.
+            if attribute_name in TRANSLATABLE_ATTRIBUTES and raw_value.strip():
+
+                self.attribute_nodes.append({
+                    "start": start_offset + value_start,
+                    "end": start_offset + value_end,
+                    "raw": raw_value,
+                    "tag": attribute_name,
+                    "attribute": True,
+                })
+
+            # Continue after the closing quote.
+            position = value_end + 1
+
+    def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
 
         ignored = (
             tag in IGNORED_TAGS
             or attributes.get("translate") == "no"
-            or self.ignore_depth > 0
         )
 
-        if ignored:
-            return
+        raw_tag = self.get_starttag_text() or ""
+        start_offset = self.get_offset()
 
-        raw_tag = self.get_starttag_text()
-
-        if not raw_tag:
-            return
-
-        tag_start = self.get_offset()
-
-        # Match only quoted user-facing attributes.
-        pattern = re.compile(
-            r'''(?P<name>placeholder|aria-label|title|alt)
-            \s*=\s*
-            (?P<quote>["'])
-            (?P<value>.*?)
-            (?P=quote)''',
-            re.IGNORECASE | re.VERBOSE
+        # Scan attributes before handling void tags.
+        self.scan_attributes(
+            tag,
+            raw_tag,
+            start_offset,
+            ignored
         )
-
-        for match in pattern.finditer(raw_tag):
-            attribute_name = match.group("name").lower()
-            value = match.group("value")
-
-            if not value.strip():
-                continue
-
-            start = tag_start + match.start("value")
-            end = tag_start + match.end("value")
-
-            self.attribute_nodes.append({
-                "start": start,
-                "end": end,
-                "raw": value,
-                "tag": attribute_name,
-                "attribute": True,
-            })
-
-    def handle_starttag(self, tag, attrs):
-        # Scan user-facing attributes, including those of void tags.
-        self.scan_attributes(tag, attrs)
 
         if tag in VOID_TAGS:
             return
-
-        attributes = dict(attrs)
-
-        ignored = (
-            tag in IGNORED_TAGS
-            or attributes.get("translate") == "no"
-        )
 
         self.tag_stack.append({
             "tag": tag,
@@ -266,11 +311,26 @@ class TextScanner(HTMLParser):
             self.ignore_depth += 1
 
     def handle_startendtag(self, tag, attrs):
-        # Scan attributes of self-closing tags too.
-        self.scan_attributes(tag, attrs)
+        attributes = dict(attrs)
+
+        ignored = (
+            tag in IGNORED_TAGS
+            or attributes.get("translate") == "no"
+        )
+
+        raw_tag = self.get_starttag_text() or ""
+        start_offset = self.get_offset()
+
+        self.scan_attributes(
+            tag,
+            raw_tag,
+            start_offset,
+            ignored
+        )
 
     def handle_endtag(self, tag):
         for index in range(len(self.tag_stack) - 1, -1, -1):
+
             if self.tag_stack[index]["tag"] == tag:
 
                 removed = self.tag_stack[index:]
@@ -308,9 +368,11 @@ class TextScanner(HTMLParser):
         })
 
 
+
 # =========================
 # HTML processing
 # =========================
+
 
 def translate_html(source, cache, overrides):
     parser = TextScanner(source)
@@ -319,6 +381,7 @@ def translate_html(source, cache, overrides):
 
     replacements = []
 
+    # Both collections now exist and have valid source positions.
     all_nodes = parser.text_nodes + parser.attribute_nodes
 
     for index, node in enumerate(all_nodes, start=1):
@@ -338,7 +401,7 @@ def translate_html(source, cache, overrides):
         # Decode HTML entities before translation.
         text = html.unescape(core)
 
-               # Manual overrides always have the highest priority.
+        # Manual overrides always have the highest priority.
         overridden = get_override(overrides, text, tag)
 
         if overridden is not None:
@@ -360,10 +423,10 @@ def translate_html(source, cache, overrides):
                     tag
                 )
 
-        # Escape translated text so it cannot accidentally become HTML.
+        # Escape quotation marks in attributes, but not ordinary text.
         translated_html = html.escape(
-          translated,
-          quote=node.get("attribute", False)
+            translated,
+            quote=node.get("attribute", False)
         )
 
         replacements.append((
@@ -379,6 +442,7 @@ def translate_html(source, cache, overrides):
         result = result[:start] + replacement + result[end:]
 
     return result
+
 
 
 # =========================
