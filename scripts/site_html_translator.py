@@ -382,7 +382,10 @@ def translate_html(source, cache, overrides):
     replacements = []
 
     # Both collections now exist and have valid source positions.
-    all_nodes = parser.text_nodes + parser.attribute_nodes
+    all_nodes = sorted(
+    parser.text_nodes + parser.attribute_nodes,
+    key=lambda node: node["start"]
+    )
 
     for index, node in enumerate(all_nodes, start=1):
 
@@ -435,12 +438,15 @@ def translate_html(source, cache, overrides):
             leading + translated_html + trailing,
         ))
 
-    # Apply replacements from right to left so earlier offsets remain valid.
-    result = source
+        # Apply replacements from right to left so earlier offsets remain valid.
+        result = source
 
-    for start, end, replacement in reversed(replacements):
-        result = result[:start] + replacement + result[end:]
+        # Apply replacements from right to left using original source positions.
+        replacements.sort(key=lambda item: item[0], reverse=True)
 
+        for start, end, replacement in replacements:
+          result = result[:start] + replacement + result[end:]
+          
     return result
 
 
