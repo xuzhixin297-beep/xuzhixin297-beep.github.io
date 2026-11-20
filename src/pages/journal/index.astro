@@ -1,80 +1,177 @@
-
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import "../../styles/journal.css";
 ---
 
 <SiteLayout
     title="Journal — Antemundane sprǣc"
-    description="A personal space for essays, questions, and reflections."
+    description="A collection of essays, questions, and reflections."
 >
-    <section class="subject-hero">
-        <p class="eyebrow">A SPACE FOR THOUGHT</p>
+    <!-- Journal introduction -->
+    <section class="journal-hero">
+        <p class="eyebrow">THE JOURNAL</p>
 
-        <h1>Journal</h1>
+        <h1>Thoughts along the way.</h1>
 
-        <p class="subject-introduction">
-            Not every idea belongs to a particular discipline.
-            This journal is a space for independent thoughts,
-            questions, arguments, and reflections about the world
-            and our place within it.
-        </p>
-
-        <p class="subject-secondary">
-            Think. Write. Reflect. Discover.
+        <p class="journal-introduction">
+            A space for ideas, questions, explorations,
+            and thoughts that wander beyond the familiar.
         </p>
     </section>
 
-    <section class="subject-explore">
-        <div class="section-heading">
-            <p class="eyebrow">EXPLORE THE JOURNAL</p>
-            <h2>Three ways to express an idea</h2>
-            <p>
-                Some thoughts become essays, some begin as questions,
-                and others remain personal reflections.
-            </p>
-        </div>
+    <!-- Search and filters -->
+    <section class="journal-discovery">
+      <div class="journal-search">
+        <svg
+            class="journal-search-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <circle cx="10.8" cy="10.8" r="6.8" />
+            <path d="m16 16 4 4" />
+        </svg>
 
-        <div class="subject-branches">
-            <a class="subject-branch" href="/journal/essays/">
-                <span class="branch-number">01</span>
-                <h3>Essays</h3>
-                <p>
-                    Longer explorations of ideas, arguments,
-                    observations, and intellectual interests.
-                </p>
-                <span class="branch-link">Read essays →</span>
-            </a>
+        <input
+          type="search"
+          id="journal-search"
+          placeholder="Search articles, ideas, or tags..."
+          aria-label="Search journal articles"
+        />
 
-            <a class="subject-branch" href="/journal/questions/">
-                <span class="branch-number">02</span>
-                <h3>Questions</h3>
-                <p>
-                    Interesting problems and unanswered questions
-                    worth investigating.
-                </p>
-                <span class="branch-link">Explore questions →</span>
-            </a>
+        <div class="selected-filters" id="selected-filters"></div>
+      </div>
 
-            <a class="subject-branch" href="/journal/reflections/">
-                <span class="branch-number">03</span>
-                <h3>Reflections</h3>
-                <p>
-                    Shorter thoughts, personal observations,
-                    and reflections on different ideas.
-                </p>
-                <span class="branch-link">Read reflections →</span>
-            </a>
-        </div>
+      <div class="journal-tags" aria-label="Filter articles by topic">
+        <button class="journal-tag active" type="button" data-filter="All">All</button>
+        <button class="journal-tag" type="button" data-filter="Physics">Physics</button>
+        <button class="journal-tag" type="button" data-filter="Mathematics">Mathematics</button>
+        <button class="journal-tag" type="button" data-filter="Philosophy">Philosophy</button>
+        <button class="journal-tag" type="button" data-filter="Reflections">Reflections</button>
+      </div>
     </section>
 
-    <section class="subject-questions">
-        <p class="eyebrow">A THOUGHT TO BEGIN WITH</p>
-        <h2>Why keep a journal?</h2>
+    <!-- Article collection -->
+    <section class="journal-library">
 
-        <ul>
-            <li>Some ideas deserve to be explored beyond the boundaries of a single subject.</li>
-            <li>Writing can reveal gaps in our own understanding.</li>
-            <li>An unanswered question can be the beginning of an interesting journey.</li>
-        </ul>
+        <div class="journal-library-heading">
+            <p class="eyebrow">THE COLLECTION</p>
+            <h2>Explore writings</h2>
+        </div>
+
+        <!-- Articles will be rendered here in the future -->
+        <div class="journal-article-list" id="journal-article-list">
+
+            <div class="journal-empty-state">
+                <div class="journal-empty-symbol" aria-hidden="true">
+                    ✳
+                </div>
+
+                <h3>The pages are still unwritten.</h3>
+
+                <p>
+                    There are no articles here yet.
+                    Every collection begins with a first thought.
+                </p>
+            </div>
+
+        </div>
+
     </section>
+
+    <!-- Pagination -->
+    <nav class="journal-pagination" aria-label="Journal pages">
+
+        <button type="button" disabled>
+            ← Previous
+        </button>
+
+        <div class="journal-page-numbers">
+            <button type="button" class="current-page" aria-current="page">
+                1
+            </button>
+        </div>
+
+        <button type="button" disabled>
+            Next →
+        </button>
+
+    </nav>
+
 </SiteLayout>
+
+<script>
+    const filterButtons = document.querySelectorAll(".journal-tag");
+    const selectedFiltersContainer = document.querySelector("#selected-filters");
+    if (!selectedFiltersContainer) {
+      throw new Error("Selected filters container was not found.");
+    }
+
+    const selectedFilters = new Set();
+
+    // Update the appearance of buttons and selected-filter chips
+    function updateFilters() {
+        // Update button active states
+        filterButtons.forEach((button) => {
+            const filterName = button.dataset.filter;
+
+            const isActive =
+                filterName === "All"
+                    ? selectedFilters.size === 0
+                    : selectedFilters.has(filterName);
+
+            button.classList.toggle("active", isActive);
+        });
+
+        // Remove old chips before rebuilding them
+        selectedFiltersContainer.replaceChildren();
+
+        // Create a chip for every selected topic
+        selectedFilters.forEach((filterName) => {
+            const chip = document.createElement("div");
+            chip.className = "filter-chip";
+
+            const label = document.createElement("span");
+            label.textContent = filterName;
+
+            const removeButton = document.createElement("button");
+            removeButton.className = "filter-chip-remove";
+            removeButton.type = "button";
+            removeButton.textContent = "×";
+            removeButton.setAttribute(
+                "aria-label",
+                `Remove ${filterName} filter`
+            );
+
+            // Remove this individual filter
+            removeButton.addEventListener("click", () => {
+                selectedFilters.delete(filterName);
+                updateFilters();
+            });
+
+            chip.append(label, removeButton);
+            selectedFiltersContainer.appendChild(chip);
+        });
+    }
+
+    // Handle clicks on the topic buttons
+    filterButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const filterName = button.dataset.filter;
+
+            if (filterName === "All") {
+                // Clear every selected filter
+                selectedFilters.clear();
+            } else if (selectedFilters.has(filterName)) {
+                // Clicking an active topic deselects it
+                selectedFilters.delete(filterName);
+            } else {
+                // Clicking an inactive topic adds it
+                selectedFilters.add(filterName);
+            }
+
+            updateFilters();
+        });
+    });
+</script>

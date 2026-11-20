@@ -1,0 +1,419 @@
+/* =================================
+   JOURNAL — HERO
+================================= */
+
+.journal-hero {
+    margin-bottom: 3rem;
+}
+
+.journal-hero .eyebrow {
+    margin-bottom: 1rem;
+    letter-spacing: 0.16em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--secondary-text);
+}
+
+.journal-hero h1 {
+    margin: 0;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    line-height: 1.12;
+    letter-spacing: -0.045em;
+    font-weight: 650;
+    color: var(--text-color);
+}
+
+.journal-introduction {
+    max-width: 680px;
+    margin-top: 1.25rem;
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--secondary-text);
+}
+
+/* =================================
+   JOURNAL — SEARCH
+================================= */
+
+.journal-discovery {
+    margin-bottom: 4rem;
+}
+
+.journal-search {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+
+    width: 100%;
+    max-width: 720px;
+
+    padding: 0.95rem 1.2rem;
+
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.journal-search:focus-within {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(100, 160, 210, 0.12);
+}
+
+.journal-search:focus-within {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(100, 160, 210, 0.12);
+}
+
+.journal-search-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+
+    stroke: var(--secondary-text);
+    stroke-width: 1.7;
+}
+
+#journal-search {
+    flex: 1 1 200px;
+    min-width: 0;
+
+    padding: 0;
+    border: none;
+    outline: none;
+
+    background: transparent;
+    color: var(--text-color);
+
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+#journal-search::placeholder {
+    color: var(--secondary-text);
+    opacity: 0.75;
+}
+
+/* =================================
+   JOURNAL — PAGE WIDTH
+================================= */
+
+.journal-hero,
+.journal-discovery,
+.journal-library,
+.journal-pagination {
+    width: 100%;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* =================================
+   JOURNAL — SELECTED FILTERS
+================================= */
+
+.selected-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+/* Hide the container while no filters exist */
+.selected-filters:empty {
+    display: none;
+}
+
+/* Individual filter chips */
+
+.filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+
+    padding: 0.35rem 0.55rem 0.35rem 0.75rem;
+
+    color: #ffffff;
+    background: #286bdb;
+    border-radius: 8px;
+
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+/* Remove-filter button */
+
+.filter-chip-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+
+    color: #ffffff;
+    font-size: 1.1rem;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.filter-chip-remove:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.filter-chip-remove:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* =================================
+   JOURNAL — TOPIC FILTERS
+================================= */
+
+.journal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+
+    margin-top: 1.2rem;
+}
+
+.journal-tag {
+    padding: 0.55rem 1rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+
+    background: transparent;
+    color: var(--secondary-text);
+
+    font-family: inherit;
+    font-size: 0.85rem;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+/* Hover */
+
+.journal-tag:hover {
+    color: var(--text-color);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+/* Selected filter */
+
+.journal-tag.active {
+    color: #ffffff;
+    background: #286bdb;
+    border-color: #286bdb;
+}
+
+/* Keyboard accessibility */
+
+.journal-tag:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 3px;
+}
+
+/* =================================
+   JOURNAL — LIBRARY HEADING
+================================= */
+
+.journal-library {
+    margin-top: 1rem;
+}
+
+.journal-library-heading {
+    margin-bottom: 2rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.journal-library-heading .eyebrow {
+    margin-bottom: 0.7rem;
+    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--secondary-text);
+}
+
+.journal-library-heading h2 {
+    margin: 0;
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+    line-height: 1.25;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* =================================
+   JOURNAL — EMPTY STATE
+================================= */
+
+.journal-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    padding: 4.5rem 1.5rem 5rem;
+    margin-top: 1rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+
+    background: var(--section-background);
+
+    transition: background .25s ease, border-color .25s ease;
+}
+
+/* Decorative symbol */
+
+.journal-empty-symbol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 52px;
+    height: 52px;
+
+    margin-bottom: 1.5rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+
+    color: var(--accent-color);
+    font-size: 1.5rem;
+
+    transition: transform .3s ease, color .3s ease;
+}
+
+.journal-empty-state:hover .journal-empty-symbol {
+    transform: rotate(45deg);
+}
+
+/* Empty-state title */
+
+.journal-empty-state h3 {
+    margin: 0;
+
+    font-size: 1.2rem;
+    font-weight: 550;
+    letter-spacing: -0.02em;
+
+    color: var(--text-color);
+}
+
+/* Empty-state description */
+
+.journal-empty-state p {
+    max-width: 420px;
+
+    margin: .85rem 0 0;
+
+    font-size: .92rem;
+    line-height: 1.8;
+
+    color: var(--secondary-text);
+}
+
+/* =================================
+   JOURNAL — PAGINATION
+================================= */
+
+.journal-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+
+    margin-top: 2.5rem;
+    padding: 1.5rem 0;
+}
+
+/* Pagination buttons */
+
+.journal-pagination > button,
+.journal-page-numbers button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 40px;
+    padding: 0.65rem 1rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+
+    background: transparent;
+    color: var(--text-color);
+
+    font-family: inherit;
+    font-size: 0.88rem;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease;
+}
+
+/* Hover — only usable buttons */
+
+.journal-pagination > button:not(:disabled):hover,
+.journal-page-numbers button:not(:disabled):hover {
+    border-color: var(--accent-color);
+    background: var(--card-background);
+    transform: translateY(-1px);
+}
+
+/* Disabled controls */
+
+.journal-pagination > button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Current page */
+
+.journal-page-numbers .current-page {
+    min-width: 40px;
+
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #ffffff;
+
+    font-weight: 600;
+    cursor: default;
+}
+
+/* Keyboard accessibility */
+
+.journal-pagination button:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 3px;
+}
