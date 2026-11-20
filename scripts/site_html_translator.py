@@ -33,6 +33,13 @@ VOID_TAGS = {
     "source", "track", "wbr",
 }
 
+TRANSLATABLE_ATTRIBUTES = {
+    "placeholder",
+    "aria-label",
+    "title",
+    "alt",
+}
+
 
 # =========================
 # Cache and overrides
@@ -175,6 +182,7 @@ class TextScanner(HTMLParser):
 
         self.source = source
         self.text_nodes = []
+        self.attribute_nodes = []
         self.tag_stack = []
         self.ignore_depth = 0
 
@@ -188,27 +196,78 @@ class TextScanner(HTMLParser):
         line, column = self.getpos()
         return self.line_offsets[line - 1] + column
 
-    def handle_starttag(self, tag, attrs):
-         if tag in VOID_TAGS:
-            return
+    def scan_attributes(self, tag, attrs):
+        attributes = dict(attrs)
 
-         attributes = dict(attrs)
-
-         ignored = (
+        ignored = (
             tag in IGNORED_TAGS
             or attributes.get("translate") == "no"
-         )
+            or self.ignore_depth > 0
+        )
 
-         self.tag_stack.append({
+        if ignored:
+            return
+
+        raw_tag = self.get_starttag_text()
+
+        if not raw_tag:
+            return
+
+        tag_start = self.get_offset()
+
+        # Match only quoted user-facing attributes.
+        pattern = re.compile(
+            r'''(?P<name>placeholder|aria-label|title|alt)
+            \s*=\s*
+            (?P<quote>["'])
+            (?P<value>.*?)
+            (?P=quote)''',
+            re.IGNORECASE | re.VERBOSE
+        )
+
+        for match in pattern.finditer(raw_tag):
+            attribute_name = match.group("name").lower()
+            value = match.group("value")
+
+            if not value.strip():
+                continue
+
+            start = tag_start + match.start("value")
+            end = tag_start + match.end("value")
+
+            self.attribute_nodes.append({
+                "start": start,
+                "end": end,
+                "raw": value,
+                "tag": attribute_name,
+                "attribute": True,
+            })
+
+    def handle_starttag(self, tag, attrs):
+        # Scan user-facing attributes, including those of void tags.
+        self.scan_attributes(tag, attrs)
+
+        if tag in VOID_TAGS:
+            return
+
+        attributes = dict(attrs)
+
+        ignored = (
+            tag in IGNORED_TAGS
+            or attributes.get("translate") == "no"
+        )
+
+        self.tag_stack.append({
             "tag": tag,
             "ignored": ignored,
-         })
+        })
 
-         if ignored:
+        if ignored:
             self.ignore_depth += 1
 
     def handle_startendtag(self, tag, attrs):
-        pass
+        # Scan attributes of self-closing tags too.
+        self.scan_attributes(tag, attrs)
 
     def handle_endtag(self, tag):
         for index in range(len(self.tag_stack) - 1, -1, -1):
@@ -245,6 +304,7 @@ class TextScanner(HTMLParser):
             "end": end,
             "raw": data,
             "tag": tag,
+            "attribute": False,
         })
 
 
@@ -259,7 +319,9 @@ def translate_html(source, cache, overrides):
 
     replacements = []
 
-    for index, node in enumerate(parser.text_nodes, start=1):
+    all_nodes = parser.text_nodes + parser.attribute_nodes
+
+    for index, node in enumerate(all_nodes, start=1):
 
         raw = node["raw"]
         tag = node["tag"]
@@ -299,7 +361,10 @@ def translate_html(source, cache, overrides):
                 )
 
         # Escape translated text so it cannot accidentally become HTML.
-        translated_html = html.escape(translated, quote=False)
+        translated_html = html.escape(
+          translated,
+          quote=node.get("attribute", False)
+        )
 
         replacements.append((
             node["start"],
