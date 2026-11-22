@@ -404,6 +404,16 @@ def translate_html(source, cache, overrides):
         # Decode HTML entities before translation.
         text = html.unescape(core)
 
+        if "Previous" in text or "Next" in text:
+            print(
+            f"[PAGINATION DEBUG] "
+            f"tag={tag!r}, "
+            f"text={text!r}, "
+            f"key={make_cache_key(text, tag)!r}, "
+            f"override={get_override(overrides, text, tag)!r}, "
+            f"cache={get_cached_translation(cache, text, tag)!r}"
+            )
+
         # Manual overrides always have the highest priority.
         overridden = get_override(overrides, text, tag)
 
@@ -438,15 +448,15 @@ def translate_html(source, cache, overrides):
             leading + translated_html + trailing,
         ))
 
-        # Apply replacements from right to left so earlier offsets remain valid.
-        result = source
+    # Apply replacements from right to left so earlier offsets remain valid.
+    result = source
 
-        # Apply replacements from right to left using original source positions.
-        replacements.sort(key=lambda item: item[0], reverse=True)
+    # Apply replacements from right to left using original source positions.
+    replacements.sort(key=lambda item: item[0], reverse=True)
 
-        for start, end, replacement in replacements:
-          result = result[:start] + replacement + result[end:]
-          
+    for start, end, replacement in replacements:
+      result = result[:start] + replacement + result[end:]
+
     return result
 
 

@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -46,14 +46,6 @@ jobs:
             echo "{}" > scripts/translation_cache.json
           fi
 
-      - name: Restore translation cache
-        uses: actions/cache@v4
-        with:
-          path: scripts/translation_cache.json
-          key: translation-cache-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            translation-cache-${{ runner.os }}-
-
       - name: Translate Markdown articles
         env:
           BAIDU_APP_ID: ${{ secrets.BAIDU_APP_ID }}
@@ -73,6 +65,20 @@ jobs:
           BAIDU_SECRET_KEY: ${{ secrets.BAIDU_SECRET_KEY }}
         run: |
           python scripts/site_html_translator.py
+
+      - name: Save translation cache to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add scripts/translation_cache.json
+
+          if git diff --cached --quiet -- scripts/translation_cache.json; then
+            echo "Translation cache unchanged. Nothing to commit."
+          else
+            git commit -m "Update translation cache [skip ci]"
+            git push origin HEAD:main
+          fi
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
