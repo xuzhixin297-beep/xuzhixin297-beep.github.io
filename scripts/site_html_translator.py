@@ -170,6 +170,14 @@ def translate_cached(cache, overrides, text, tag):
 
     return translated
 
+def is_math_element(tag, attributes):
+    classes = set((attributes.get("class") or "").split())
+
+    return (
+        tag == "math"
+        or bool(classes.intersection({"katex", "katex-display"}))
+    )
+
 
 # =========================
 # HTML text scanner
@@ -284,8 +292,9 @@ class TextScanner(HTMLParser):
         attributes = dict(attrs)
 
         ignored = (
-            tag in IGNORED_TAGS
-            or attributes.get("translate") == "no"
+          tag in IGNORED_TAGS
+          or attributes.get("translate") == "no"
+          or is_math_element(tag, attributes)
         )
 
         raw_tag = self.get_starttag_text() or ""
@@ -314,8 +323,9 @@ class TextScanner(HTMLParser):
         attributes = dict(attrs)
 
         ignored = (
-            tag in IGNORED_TAGS
-            or attributes.get("translate") == "no"
+          tag in IGNORED_TAGS
+          or attributes.get("translate") == "no"
+          or is_math_element(tag, attributes)
         )
 
         raw_tag = self.get_starttag_text() or ""

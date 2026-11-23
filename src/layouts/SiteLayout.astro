@@ -2,6 +2,7 @@
 ---
 import "../styles/home.css";
 import { getLocale, getUiText } from '../i18n/ui';
+import "katex/dist/katex.min.css";
 
 const locale = getLocale(Astro.url.pathname);
 const t = getUiText(locale);

@@ -26,3 +26,7 @@ pnpm-debug.log*
 # local environment variables
 .env.*
 !.env.example
+
+# Local Knowledge Studio data (private drafts)
+knowledge-studio/data/*
+knowledge-studio/

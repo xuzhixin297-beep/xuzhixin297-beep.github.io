@@ -410,7 +410,7 @@
 
   footer {
     padding: 24px;
-    border-top: 1px solid #e3e0d8;
+    border-top: 1px solid var(--border-color);
     color: #59616b;
     text-align: center;
     font-size: 0.85rem;
@@ -1155,4 +1155,21 @@ nav a:focus-visible::after {
 
 .subpage-back-link:hover {
     opacity: 1;
+}
+
+/* Subject questions section */
+.subject-questions {
+    max-width: 760px;
+    margin: 30px auto 0;
+    text-align: left;
+}
+
+.subject-questions ul {
+    padding-left: 24px;
+    color: var(--secondary-text);
+    line-height: 2.3;
+}
+
+.subject-questions li + li {
+    margin-top: 12px;
 }
