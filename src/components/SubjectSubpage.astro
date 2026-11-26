@@ -2,12 +2,20 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 
+interface ChildBranch {
+    title: string;
+    introduction: string;
+    url: string;
+}
+
 interface Props {
     subject: string;
     title: string;
     eyebrow: string;
     introduction: string;
     description: string;
+    contentHtml?: string;
+    children?: ChildBranch[];
 }
 
 const {
@@ -15,7 +23,9 @@ const {
     title,
     eyebrow,
     introduction,
-    description
+    description,
+    contentHtml = "",
+    children = []
 } = Astro.props;
 ---
 
@@ -39,21 +49,102 @@ const {
         </section>
 
         <section class="subject-subpage-content">
-            <p class="eyebrow">UNDER CONSTRUCTION</p>
+          {contentHtml ? (
+            <div
+              class="markdown-content"
+              set:html={contentHtml}
+            />
+          ) : (
+              <>
+                <p class="eyebrow">UNDER CONSTRUCTION</p>
 
-            <h2>A space for exploration</h2>
+                <p>{description}</p>
 
-            <p>{description}</p>
+                <p>
+                  More content will be added here as this section develops.
+                </p>
+              </>
+           )}
+       </section>
+        {children.length > 0 && (
+            <section class="knowledge-branch-children">
+                <p class="eyebrow">EXPLORE FURTHER</p>
 
-            <p>
-                This section is being prepared. More articles,
-                discussions, and interactive experiences will
-                appear here in the future.
-            </p>
+                <div class="knowledge-branch-grid">
+                    {children.map(child => (
+                        <a
+                            class="knowledge-branch-card"
+                            href={child.url}
+                        >
+                            <h2>{child.title}</h2>
 
-            <a class="subpage-back-link" href={`/${subject.toLowerCase()}/`}>
-                ← Back to {subject}
-            </a>
-        </section>
+                            {child.introduction && (
+                                <p>{child.introduction}</p>
+                            )}
+
+                            <span class="branch-card-link">
+                                Explore →
+                            </span>
+                        </a>
+                    ))}
+                </div>
+            </section>
+        )}
     </main>
 </SiteLayout>
+
+<style>
+    .knowledge-branch-children {
+        margin: 64px auto 0;
+        max-width: 1100px;
+    }
+
+    .knowledge-branch-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+        gap: 22px;
+        margin-top: 24px;
+    }
+
+    .knowledge-branch-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 170px;
+        padding: 25px;
+        border: 1px solid var(--border-color, #3a414c);
+        border-radius: 16px;
+        background: var(--card-background, #252c35);
+        color: inherit;
+        text-decoration: none;
+        transition:
+            transform 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    .knowledge-branch-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent-color, #8ca8d8);
+    }
+
+    .knowledge-branch-card h2 {
+        margin: 0 0 12px;
+    }
+
+    .knowledge-branch-card p {
+        line-height: 1.7;
+        opacity: 0.8;
+    }
+
+    .branch-card-link {
+        margin-top: auto;
+        padding-top: 18px;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+        .knowledge-branch-children {
+            margin-top: 44px;
+        }
+    }
+</style>

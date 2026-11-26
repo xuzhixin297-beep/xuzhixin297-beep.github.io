@@ -1,0 +1,190 @@
+
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+
+interface ChildBranch {
+    title: string;
+    introduction: string;
+    url: string;
+}
+
+interface Props {
+    subject: string;
+    title: string;
+    eyebrow?: string;
+    introduction?: string;
+    description?: string;
+    contentHtml?: string;
+    children?: ChildBranch[];
+    parentTitle?: string;
+    parentUrl?: string;
+}
+
+const {
+    subject,
+    title,
+    eyebrow = subject.toUpperCase(),
+    introduction = "",
+    description = "",
+    contentHtml = "",
+    children = [],
+    parentTitle = subject,
+    parentUrl = `/${subject.toLowerCase()}/`
+} = Astro.props;
+---
+
+<SiteLayout
+    title={`${title} – ${subject} – Antemundane sprǣc`}
+    description={description || introduction}
+>
+    <main class="knowledge-branch-page">
+
+        <section class="subject-hero">
+            <p class="eyebrow">{eyebrow}</p>
+
+            <h1>{title}</h1>
+
+            {introduction && (
+                <p class="subject-introduction">
+                    {introduction}
+                </p>
+            )}
+
+            <p class="subject-secondary">
+                Question. Explore. Discover.
+            </p>
+        </section>
+
+        <section class="knowledge-branch-content">
+          {contentHtml ? (
+            <div
+              class="markdown-content"
+              set:html={contentHtml}
+            />
+          ) : (
+            <>
+              <p class="eyebrow">UNDER CONSTRUCTION</p>
+
+              <p>
+                  {description || "More content will be added here as this section develops."}
+              </p>
+
+              <p>
+                  More content will be added here as this section develops.
+              </p>
+            </>
+          )}
+        </section>
+
+        {children.length > 0 && (
+            <section class="knowledge-branch-children">
+                <p class="eyebrow">EXPLORE FURTHER</p>
+
+                <div class="knowledge-branch-grid">
+                    {children.map(child => (
+                        <a
+                            class="knowledge-branch-card"
+                            href={child.url}
+                        >
+                            <h2>{child.title}</h2>
+
+                            {child.introduction && (
+                                <p>{child.introduction}</p>
+                            )}
+
+                            <span class="branch-card-link">
+                                Explore →
+                            </span>
+                        </a>
+                    ))}
+                </div>
+            </section>
+        )}
+
+        <div class="knowledge-branch-back">
+            <a
+                class="subpage-back-link"
+                href={parentUrl}
+            >
+                ← Back to {parentTitle}
+            </a>
+        </div>
+
+    </main>
+</SiteLayout>
+
+<style>
+    .knowledge-branch-page {
+        width: min(1100px, calc(100% - 48px));
+        margin: 0 auto;
+        padding-bottom: 90px;
+    }
+
+    .knowledge-branch-content {
+        margin: 48px auto;
+        max-width: 850px;
+        line-height: 1.85;
+        overflow-wrap: anywhere;
+    }
+
+    .knowledge-branch-children {
+        margin-top: 64px;
+    }
+
+    .knowledge-branch-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+        gap: 22px;
+        margin-top: 24px;
+    }
+
+    .knowledge-branch-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 170px;
+        padding: 25px;
+        border: 1px solid var(--border-color, #3a414c);
+        border-radius: 16px;
+        background: var(--card-background, #252c35);
+        color: inherit;
+        text-decoration: none;
+        transition:
+            transform 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    .knowledge-branch-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent-color, #8ca8d8);
+    }
+
+    .knowledge-branch-card h2 {
+        margin: 0 0 12px;
+    }
+
+    .knowledge-branch-card p {
+        line-height: 1.7;
+        opacity: 0.8;
+    }
+
+    .branch-card-link {
+        margin-top: auto;
+        padding-top: 18px;
+        font-size: 0.9rem;
+    }
+
+    .knowledge-branch-back {
+        margin-top: 55px;
+    }
+
+    @media (max-width: 600px) {
+        .knowledge-branch-page {
+            width: calc(100% - 32px);
+        }
+
+        .knowledge-branch-content {
+            margin-top: 32px;
+        }
+    }
+</style>
