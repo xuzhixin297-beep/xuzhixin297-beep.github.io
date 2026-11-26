@@ -1,12 +1,14 @@
-
 ---
 import SubjectSubpage from "../../../components/SubjectSubpage.astro";
+import { physicsTopics } from "../../../generated/knowledge-content.js";
 ---
 
 <SubjectSubpage
     subject="Physics"
     title="Interesting Topics"
     eyebrow="FOLLOW YOUR CURIOSITY"
-    introduction="Explore unusual questions, fascinating phenomena, and ideas that reveal unexpected aspects of the physical universe."
-    description="This collection will contain thought-provoking physical questions, detailed explanations, mathematical derivations, and explorations beyond the standard curriculum."
+    introduction={physicsTopics.introduction}
+    description={physicsTopics.description}
+    contentHtml={physicsTopics.contentHtml}
+    children={physicsTopics.children}
 />

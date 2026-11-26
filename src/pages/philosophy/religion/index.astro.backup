@@ -1,0 +1,18 @@
+
+---
+import SubjectSubpage from "../../../components/SubjectSubpage.astro";
+import { philosophyTopics } from "../../../generated/knowledge-content.js";
+
+const religion = philosophyTopics.children.find(
+    branch => branch.url === "/philosophy/religion/"
+);
+---
+
+<SubjectSubpage
+    subject="Philosophy"
+    title={religion?.title ?? "Religion"}
+    eyebrow="EXPLORE FAITH AND EXISTENCE"
+    introduction={religion?.introduction ?? ""}
+    description="This section will explore arguments concerning the existence of God, religious experience, the problem of evil, and the relationship between faith and reason."
+    contentHtml={religion?.contentHtml ?? ""}
+/>

@@ -1,6 +1,11 @@
 
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import {
+    philosophyIntroductionHtml,
+    philosophyIntroductionPreview,
+    philosophyTopics
+} from "../../generated/knowledge-content.js";
 ---
 
 <SiteLayout
@@ -12,11 +17,27 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 
         <h1>Philosophy</h1>
 
-        <p class="subject-introduction">
-            From the nature of consciousness to the foundations of
-            knowledge, philosophy is an attempt to examine our deepest
-            assumptions and understand the world through critical thought.
-        </p>
+        {philosophyIntroductionHtml && (
+          <details class="subject-intro-details">
+            <summary class="subject-intro-summary">
+                <span class="subject-intro-heading">About Philosophy</span>
+
+                <span class="subject-intro-preview">
+                    {philosophyIntroductionPreview}
+                </span>
+
+                <span class="intro-action">
+                    <span class="expand-label">Read more +</span>
+                    <span class="collapse-label">Show less −</span>
+                </span>
+            </summary>
+
+            <div
+                class="subject-introduction markdown-content"
+                set:html={philosophyIntroductionHtml}
+            />
+          </details>
+        )}
 
         <p class="subject-secondary">
             Question. Reflect. Challenge. Understand.
@@ -34,26 +55,24 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
         </div>
 
         <div class="subject-branches">
-            <a class="subject-branch" href="/philosophy/epistemology/">
-                <span class="branch-number">01</span>
-                <h3>Epistemology</h3>
-                <p>
-                    What is knowledge? How can we distinguish
-                    truth from belief, and what can we truly know?
-                </p>
-                <span class="branch-link">Explore knowledge →</span>
-            </a>
+            {philosophyTopics.children.map((branch, index) => (
+              <a class="subject-branch" href={branch.url}>
+                <span class="branch-number">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
 
-            <a class="subject-branch" href="/philosophy/religion/">
-                <span class="branch-number">02</span>
-                <h3>Religion</h3>
-                <p>
-                    Examine questions about faith, existence,
-                    divinity, meaning, and the nature of belief.
-                </p>
-                <span class="branch-link">Explore beliefs →</span>
-            </a>
+                <h3>{branch.title}</h3>
 
+                <p>
+                  {branch.introduction ||
+                    "Explore this field of philosophy and its central questions."}
+                </p>
+
+                <span class="branch-link">
+                  Explore {branch.title} →
+                </span>
+              </a>
+            ))}
             <a class="subject-branch" href="/philosophy/forum/">
                 <span class="branch-number">03</span>
                 <h3>Forum</h3>

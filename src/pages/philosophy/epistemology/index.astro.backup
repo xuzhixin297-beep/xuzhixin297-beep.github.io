@@ -1,0 +1,18 @@
+
+---
+import SubjectSubpage from "../../../components/SubjectSubpage.astro";
+import { philosophyTopics } from "../../../generated/knowledge-content.js";
+
+const epistemology = philosophyTopics.children.find(
+    branch => branch.url === "/philosophy/epistemology/"
+);
+---
+
+<SubjectSubpage
+    subject="Philosophy"
+    title={epistemology?.title ?? "Epistemology"}
+    eyebrow="INVESTIGATE THE NATURE OF KNOWLEDGE"
+    introduction={epistemology?.introduction ?? ""}
+    description="This section will explore skepticism, truth, perception, justification, rationalism, empiricism, and the limits of human knowledge."
+    contentHtml={epistemology?.contentHtml ?? ""}
+/>

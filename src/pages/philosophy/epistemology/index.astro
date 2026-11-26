@@ -1,12 +1,8 @@
-
 ---
-import SubjectSubpage from "../../../components/SubjectSubpage.astro";
+import KnowledgeBranchPage from "../../../components/KnowledgeBranchPage.astro";
+
+const pageData = JSON.parse("{\"subject\":\"Philosophy\",\"title\":\"Epistemology\",\"eyebrow\":\"INVESTIGATE THE NATURE OF KNOWLEDGE\",\"introduction\":\"Epistemology.\",\"description\":\"This section will explore skepticism, truth, perception, justification, rationalism, empiricism, and the limits of human knowledge.\",\"contentHtml\":\"\",\"children\":[],\"parentTitle\":\"Interesting Topics\",\"parentUrl\":\"/philosophy/\"}");
 ---
 
-<SubjectSubpage
-    subject="Philosophy"
-    title="Epistemology"
-    eyebrow="INVESTIGATE THE NATURE OF KNOWLEDGE"
-    introduction="Examine what knowledge is, how beliefs are justified, and whether certainty is ever truly attainable."
-    description="This section will explore skepticism, truth, perception, justification, rationalism, empiricism, and the limits of human knowledge."
-/>
+<!-- KNOWLEDGE-STUDIO:GENERATED-BRANCH-PAGE -->
+<KnowledgeBranchPage {...pageData} />

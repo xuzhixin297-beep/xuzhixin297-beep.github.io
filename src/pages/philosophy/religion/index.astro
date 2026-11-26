@@ -1,12 +1,8 @@
-
 ---
-import SubjectSubpage from "../../../components/SubjectSubpage.astro";
+import KnowledgeBranchPage from "../../../components/KnowledgeBranchPage.astro";
+
+const pageData = JSON.parse("{\"subject\":\"Philosophy\",\"title\":\"Religion\",\"eyebrow\":\"EXPLORE FAITH AND EXISTENCE\",\"introduction\":\"Religion.\",\"description\":\"This section will explore arguments concerning the existence of God, religious experience, the problem of evil, and the relationship between faith and reason.\",\"contentHtml\":\"\",\"children\":[],\"parentTitle\":\"Interesting Topics\",\"parentUrl\":\"/philosophy/\"}");
 ---
 
-<SubjectSubpage
-    subject="Philosophy"
-    title="Religion"
-    eyebrow="EXPLORE FAITH AND EXISTENCE"
-    introduction="Examine philosophical questions about divinity, faith, existence, morality, and the meaning of life."
-    description="This section will explore arguments concerning the existence of God, religious experience, the problem of evil, and the relationship between faith and reason."
-/>
+<!-- KNOWLEDGE-STUDIO:GENERATED-BRANCH-PAGE -->
+<KnowledgeBranchPage {...pageData} />

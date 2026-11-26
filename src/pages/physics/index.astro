@@ -1,6 +1,10 @@
 
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import {
+    physicsIntroductionHtml,
+    physicsIntroductionPreview
+} from "../../generated/knowledge-content.js";
 ---
 
 <SiteLayout
@@ -12,11 +16,27 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 
         <h1>Physics</h1>
 
-        <p class="subject-introduction">
-            From the motion of a falling object to the structure of
-            the universe, physics is an attempt to understand the
-            fundamental principles governing reality.
-        </p>
+        {physicsIntroductionHtml && (
+          <details class="subject-intro-details">
+            <summary class="subject-intro-summary">
+              <span class="subject-intro-heading">About Physics</span>
+
+              <span class="subject-intro-preview">
+                {physicsIntroductionPreview}
+              </span>
+
+              <span class="intro-action">
+                  <span class="expand-label">Read more +</span>
+                  <span class="collapse-label">Show less −</span>
+              </span>
+            </summary>
+
+            <div
+              class="subject-introduction markdown-content"
+              set:html={physicsIntroductionHtml}
+            />
+          </details>
+        )}
 
         <p class="subject-secondary">
             Question. Derive. Experiment. Discover.

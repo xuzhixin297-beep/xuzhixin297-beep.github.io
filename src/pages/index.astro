@@ -1,21 +1,34 @@
 
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-
-const introduction =
-    "An open forum for free discussion & exploration of physics, math, and philosophy. What we're looking for: etymology, derivation, experimentation, collision...";
+import {
+    homepageIntroductionHtml,
+    homepageContentHtml
+} from "../generated/knowledge-content.js";
 ---
 
 <SiteLayout
     title="Antemundane sprǣc — Explore Ideas"
-    description={introduction}
+    description="An open space for exploring physics, mathematics, philosophy, and ideas beyond conventional boundaries."
 >
     <section class="hero">
         <p class="eyebrow">A SPACE FOR CURIOSITY</p>
         <h1>About Knowledge But Beyond Knowledge.</h1>
-        <p class="intro">{introduction}</p>
+        <div
+          class="intro markdown-content"
+          set:html={homepageIntroductionHtml}
+        />
         <a class="explore" href="#explore">Explore by interests ↓</a>
     </section>
+
+    {homepageContentHtml && (
+    <section class="homepage-content">
+        <div
+            class="markdown-content"
+            set:html={homepageContentHtml}
+        />
+    </section>
+    )}
 
     <section id="explore" class="topics">
         <p class="eyebrow">EXPLORE</p>

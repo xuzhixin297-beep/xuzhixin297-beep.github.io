@@ -1,6 +1,10 @@
 
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import {
+    mathematicsIntroductionHtml,
+    mathematicsIntroductionPreview
+} from "../../generated/knowledge-content.js";
 ---
 
 <SiteLayout
@@ -12,11 +16,27 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 
         <h1>Mathematics</h1>
 
-        <p class="subject-introduction">
-            From the properties of numbers to the geometry of space,
-            mathematics is a way of discovering patterns, expressing
-            relationships, and understanding abstract structures.
-        </p>
+        {mathematicsIntroductionHtml && (
+          <details class="subject-intro-details">
+          <summary class="subject-intro-summary">
+              <span class="subject-intro-heading">About Mathematics</span>
+
+              <span class="subject-intro-preview">
+                  {mathematicsIntroductionPreview}
+              </span>
+
+              <span class="intro-action">
+                  <span class="expand-label">Read more +</span>
+                  <span class="collapse-label">Show less −</span>
+              </span>
+          </summary>
+
+          <div
+              class="subject-introduction markdown-content"
+              set:html={mathematicsIntroductionHtml}
+          />
+          </details>
+        )}
 
         <p class="subject-secondary">
             Observe. Question. Prove. Discover.
