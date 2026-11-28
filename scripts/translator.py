@@ -1,81 +1,183 @@
+"""
+Translate English text into Simplified Chinese with an
+OpenAI-compatible chat completion API.
 
-import os
-import time
-import hashlib
-import secrets
+The default provider is DeepSeek. Any OpenAI-compatible endpoint
+can be used by setting:
+
+    ZH_API_BASE   e.g. https://api.deepseek.com
+    ZH_API_KEY    the provider API key
+    ZH_MODEL      e.g. deepseek-chat
+
+When no key is configured, a locally running DSH gateway is used
+for development:
+
+    http://127.0.0.1:8326/v1
+    model: deepseek-account/deepseek-flash
+
+The local gateway only exists while the DSH desktop app is running,
+so continuous integration must provide ZH_API_KEY.
+"""
+
+from __future__ import annotations
+
 import json
-import urllib.parse
-import urllib.request
+import os
+import re
+import sys
+import time
 import urllib.error
+import urllib.request
+from pathlib import Path
 
 
-# --------------------------------------------------
-# 1. Configuration
-# --------------------------------------------------
+# ==================================================
+# Configuration
+# ==================================================
 
-API_URL = "https://fanyi-api.baidu.com/api/trans/vip/translate"
+DEFAULT_BASE_URL = "https://api.deepseek.com"
+DEFAULT_MODEL = "deepseek-chat"
 
-MAX_CHARS = 900
-REQUEST_INTERVAL = 1.1
+LOCAL_GATEWAY_KEY_FILE = (
+    Path.home() / ".dsh" / "openai-gateway" / "api-key"
+)
+LOCAL_GATEWAY_BASE_URL = "http://127.0.0.1:8326/v1"
+LOCAL_GATEWAY_MODEL = "deepseek-account/deepseek-flash"
+
+# Long Markdown pages are split at paragraph boundaries.
+MAX_CHARS = 1800
+
+# Pause between requests so the provider never rate-limits us.
+REQUEST_INTERVAL = 0.2
+
 MAX_RETRIES = 4
-RETRY_DELAY = 3
+RETRY_DELAY = 2.0
+TIMEOUT_SECONDS = 90
+
+TEMPERATURE = 0.2
+
+# Every protected fragment uses this shape (brand, inline and block
+# placeholders all share it), which the model must copy unchanged.
+PLACEHOLDER_PATTERN = re.compile(r"ZXQ[A-Z0-9_]*QXZ")
+
+SYSTEM_PROMPT = """\
+You are a professional translator working on a personal knowledge website about physics, mathematics, and philosophy. You translate English into natural, precise Simplified Chinese.
+
+Rules:
+1. Output only the translation. No explanations, no quotation marks around it, no markdown fences.
+2. Copy every placeholder token of the form ZXQ...QXZ exactly once and unchanged.
+3. Keep LaTeX commands and mathematical content unchanged.
+4. Preserve the author's tone: thoughtful, elegant, sometimes informal. Do not make it sound like a textbook.
+5. The input may be only a fragment of a larger sentence (for example a link label, a heading, or text interrupted by inline markup). Translate the fragment as a fragment: do not invent missing words and do not add punctuation that is not implied.
+6. Never translate proper nouns, code, URLs, or the website name Antemundane sprǣc.
+7. Short labels (link text, navigation items, headings of one or two words) must become the concise, conventional Chinese label. Never replace a word with a different concept, and keep the label as short as the original.
+8. If the input ends in the middle of a sentence, the Chinese must also end in the middle; do not complete it.
+"""
+
+_last_request_time = 0.0
 
 
-# --------------------------------------------------
-# 2. Retrieve credentials
-# --------------------------------------------------
+# ==================================================
+# 1. Provider configuration
+# ==================================================
 
-def get_credentials():
+def _read_local_gateway_key():
+    try:
+        key = LOCAL_GATEWAY_KEY_FILE.read_text(
+            encoding="utf-8"
+        ).strip()
+    except OSError:
+        return ""
+
+    return key
+
+
+def get_config():
     """
-    Read Baidu credentials from environment variables.
-    Never store credentials directly in this file.
+    Return (base_url, api_key, model, source).
+
+    Environment variables win. Without a key, fall back to the
+    local DSH gateway so development works without a paid key.
     """
 
-    app_id = os.environ.get("BAIDU_APP_ID")
-    secret_key = os.environ.get("BAIDU_SECRET_KEY")
+    base_url = os.environ.get("ZH_API_BASE", "").strip()
+    api_key = os.environ.get("ZH_API_KEY", "").strip()
+    model = os.environ.get("ZH_MODEL", "").strip()
 
-    if not app_id or not secret_key:
-        raise RuntimeError(
-            "Baidu credentials are missing. "
-            "Check BAIDU_APP_ID and BAIDU_SECRET_KEY."
+    if api_key:
+        return (
+            (base_url or DEFAULT_BASE_URL).rstrip("/"),
+            api_key,
+            model or DEFAULT_MODEL,
+            "environment",
         )
 
-    return app_id, secret_key
+    gateway_key = _read_local_gateway_key()
+
+    if gateway_key:
+        return (
+            (base_url or LOCAL_GATEWAY_BASE_URL).rstrip("/"),
+            gateway_key,
+            model or LOCAL_GATEWAY_MODEL,
+            "local DSH gateway",
+        )
+
+    raise RuntimeError(
+        "No translation credentials found. "
+        "Set ZH_API_KEY (optionally ZH_API_BASE and ZH_MODEL), "
+        "or start the DSH desktop app so its local gateway is "
+        "available at "
+        f"{LOCAL_GATEWAY_BASE_URL}."
+    )
 
 
-# --------------------------------------------------
-# 3. Divide text into smaller chunks
-# --------------------------------------------------
+def validate_config():
+    """
+    Fail early with a clear message when no provider is usable.
+    """
 
+    base_url, api_key, model, source = get_config()
+
+    print(
+        f"[INFO] Translation provider: {source} "
+        f"({base_url}, model={model})"
+    )
+
+    return base_url, api_key, model
+
+
+# ==================================================
+# 2. Split a long text into API-sized chunks
+# ==================================================
 
 def split_text(text, max_chars=MAX_CHARS):
     """
-    Split text into chunks while preserving every source character.
-    Prefer newline boundaries when possible.
+    Split text into chunks small enough for one API request.
+
+    Splitting happens at newlines whenever possible, so paragraphs
+    and Markdown blocks are never cut in the middle.
     """
 
-    if not text:
-        return []
+    if len(text) <= max_chars:
+        return [text]
 
     chunks = []
     remaining = text
 
     while len(remaining) > max_chars:
 
-        # Find the last newline within the allowed chunk size.
-        cut_position = remaining.rfind(
-            "\n", 0, max_chars
-        )
+        window = remaining[:max_chars]
 
-        # If there is no suitable newline, split by character count.
-        if cut_position <= 0:
-            cut_position = max_chars
-        else:
-            # Include the newline in the preceding chunk.
-            cut_position += 1
+        split_at = window.rfind("\n")
 
-        chunks.append(remaining[:cut_position])
-        remaining = remaining[cut_position:]
+        if split_at <= 0:
+            split_at = window.rfind(" ")
+
+        if split_at <= 0:
+            split_at = max_chars
+
+        chunks.append(remaining[:split_at])
+        remaining = remaining[split_at:]
 
     if remaining:
         chunks.append(remaining)
@@ -83,78 +185,142 @@ def split_text(text, max_chars=MAX_CHARS):
     return chunks
 
 
+# ==================================================
+# 3. Build the request payload
+# ==================================================
 
-# --------------------------------------------------
-# 4. Translate one chunk
-# --------------------------------------------------
+def build_messages(text, context=None):
+    parts = []
 
-_last_request_time = 0.0
+    if context:
+        parts.append(
+            "Page context:\n"
+            f"{context}\n"
+        )
+
+    parts.append(
+        "Translate the following English text into Simplified "
+        "Chinese. It may be a fragment of a sentence.\n\n"
+        f"{text}"
+    )
+
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": "\n".join(parts)},
+    ]
 
 
-def translate_chunk(text):
+def clean_translation(content):
     """
-    Send one authenticated translation request to Baidu.
+    Remove whitespace and accidental wrapping the model may add.
+    """
+
+    cleaned = content.strip()
+
+    if len(cleaned) >= 2 and cleaned[0] == cleaned[-1] and cleaned[0] in "\"'“”":
+        cleaned = cleaned[1:-1].strip()
+
+    if cleaned.startswith("```") and cleaned.endswith("```"):
+        cleaned = cleaned.strip("`").strip()
+        if cleaned.startswith("zh"):
+            cleaned = cleaned[2:].strip()
+
+    return cleaned
+
+
+def verify_placeholders(source, translated):
+    """
+    Every protected token must survive exactly once.
+    """
+
+    tokens = PLACEHOLDER_PATTERN.findall(source)
+
+    if not tokens:
+        return
+
+    problems = []
+
+    for token in set(tokens):
+        expected = tokens.count(token)
+        actual = translated.count(token)
+
+        if actual != expected:
+            problems.append(
+                f"{token}: expected {expected}, found {actual}"
+            )
+
+    if problems:
+        raise ValueError(
+            "Placeholders were lost or duplicated: "
+            + "; ".join(problems)
+        )
+
+
+# ==================================================
+# 4. One API request
+# ==================================================
+
+def translate_chunk(text, context=None):
+    """
+    Translate one chunk and verify its protected placeholders.
     """
 
     global _last_request_time
 
-    app_id, secret_key = get_credentials()
+    base_url, api_key, model, source = get_config()
 
-    # Respect the standard edition's request-rate limit.
-    elapsed = time.monotonic() - _last_request_time
+    endpoint = f"{base_url}/chat/completions"
 
-    if elapsed < REQUEST_INTERVAL:
-        time.sleep(REQUEST_INTERVAL - elapsed)
-
-    salt = secrets.token_hex(8)
-
-    sign_string = app_id + text + salt + secret_key
-
-    sign = hashlib.md5(
-        sign_string.encode("utf-8")
-    ).hexdigest()
-
-    parameters = {
-        "q": text,
-        "from": "en",
-        "to": "zh",
-        "appid": app_id,
-        "salt": salt,
-        "sign": sign,
+    payload = {
+        "model": model,
+        "messages": build_messages(text, context),
+        "temperature": TEMPERATURE,
+        "stream": False,
     }
 
-    encoded_parameters = urllib.parse.urlencode(
-        parameters
-    ).encode("utf-8")
+    body = json.dumps(payload).encode("utf-8")
 
-    request = urllib.request.Request(
-        API_URL,
-        data=encoded_parameters,
-        method="POST",
-    )
-
-    _last_request_time = time.monotonic()
-
-    result = None
+    last_error = None
 
     for attempt in range(1, MAX_RETRIES + 1):
+
+        # Respect the provider rate limit between requests.
+        elapsed = time.monotonic() - _last_request_time
+
+        if elapsed < REQUEST_INTERVAL:
+            time.sleep(REQUEST_INTERVAL - elapsed)
+
+        request = urllib.request.Request(
+            endpoint,
+            data=body,
+            method="POST",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
+        )
+
+        _last_request_time = time.monotonic()
 
         try:
             with urllib.request.urlopen(
                 request,
-                timeout=30
+                timeout=TIMEOUT_SECONDS,
             ) as response:
-
                 result = json.loads(
                     response.read().decode("utf-8")
                 )
 
-            # Request succeeded.
-            break
-
         except urllib.error.HTTPError as error:
+            detail = ""
 
-            # Retry temporary server errors or rate limiting.
+            try:
+                detail = error.read().decode(
+                    "utf-8", errors="replace"
+                )[:400]
+            except Exception:
+                pass
+
             retryable = (
                 error.code == 429
                 or 500 <= error.code <= 599
@@ -162,81 +328,83 @@ def translate_chunk(text):
 
             if not retryable or attempt == MAX_RETRIES:
                 raise RuntimeError(
-                    f"Baidu HTTP error: {error.code}"
+                    f"Translation API HTTP error {error.code} "
+                    f"({source}): {detail}"
                 ) from error
 
-            wait_time = RETRY_DELAY * (2 ** (attempt - 1))
-
-            print(
-                f"HTTP {error.code}. "
-                f"Retry {attempt}/{MAX_RETRIES - 1} "
-                f"in {wait_time} seconds..."
-            )
-
-            time.sleep(wait_time)
+            last_error = f"HTTP {error.code}"
 
         except urllib.error.URLError as error:
-
             if attempt == MAX_RETRIES:
                 raise RuntimeError(
-                    f"Could not connect to Baidu after "
-                    f"{MAX_RETRIES} attempts: {error.reason}"
+                    f"Could not reach the translation API "
+                    f"({source}) after {MAX_RETRIES} attempts: "
+                    f"{error.reason}"
                 ) from error
 
-            wait_time = RETRY_DELAY * (2 ** (attempt - 1))
-
-            print(
-                f"Connection failed. "
-                f"Retry {attempt}/{MAX_RETRIES - 1} "
-                f"in {wait_time} seconds..."
-            )
-
-            time.sleep(wait_time)
+            last_error = str(error.reason)
 
         except TimeoutError as error:
-
             if attempt == MAX_RETRIES:
                 raise RuntimeError(
-                    f"Request timed out after "
+                    "Translation request timed out after "
                     f"{MAX_RETRIES} attempts."
                 ) from error
 
-            wait_time = RETRY_DELAY * (2 ** (attempt - 1))
+            last_error = "timeout"
 
-            print(
-                f"Request timed out. "
-                f"Retry {attempt}/{MAX_RETRIES - 1} "
-                f"in {wait_time} seconds..."
-            )
+        else:
+            try:
+                choices = result.get("choices") or []
 
-            time.sleep(wait_time)
+                if not choices:
+                    raise KeyError("no choices in response")
 
-    if "error_code" in result:
-        raise RuntimeError(
-            "Baidu API error: "
-            f"{result['error_code']} - "
-            f"{result.get('error_msg', 'Unknown error')}"
+                content = choices[0]["message"]["content"]
+
+                if not isinstance(content, str) or not content.strip():
+                    raise KeyError("empty translation")
+
+                translated = clean_translation(content)
+
+                verify_placeholders(text, translated)
+
+                return translated
+
+            except (KeyError, ValueError) as error:
+                last_error = str(error)
+
+                if attempt == MAX_RETRIES:
+                    raise RuntimeError(
+                        "The translation API returned an unusable "
+                        f"response: {last_error}"
+                    ) from error
+
+        wait_time = RETRY_DELAY * (2 ** (attempt - 1))
+
+        print(
+            f"Translation attempt {attempt} failed "
+            f"({last_error}). Retrying in "
+            f"{wait_time:g} seconds..."
         )
 
-    translations = result.get("trans_result")
+        time.sleep(wait_time)
 
-    if not translations:
-        raise RuntimeError(
-            "Baidu returned no translation result."
-        )
-
-    return "\n".join(
-        item["dst"] for item in translations
+    raise RuntimeError(
+        f"Translation failed after {MAX_RETRIES} attempts."
     )
 
 
-# --------------------------------------------------
+# ==================================================
 # 5. Translate an entire text
-# --------------------------------------------------
+# ==================================================
 
-def translate_text(text):
+def translate_text(text, context=None):
     """
     Translate a long English text into Simplified Chinese.
+
+    ``context`` is optional background (page path, title, heading)
+    that helps the model translate fragments correctly.
     """
 
     chunks = split_text(text)
@@ -245,37 +413,58 @@ def translate_text(text):
 
     for index, chunk in enumerate(chunks, start=1):
 
-        print(
-            f"Translating chunk {index}/{len(chunks)}..."
-        )
+        if len(chunks) > 1:
+            print(
+                f"Translating chunk {index}/{len(chunks)}..."
+            )
 
-        translated = translate_chunk(chunk)
+        translated = translate_chunk(chunk, context=context)
 
         translated_chunks.append(translated)
 
     return "".join(translated_chunks)
 
-# Temporary added lines
+
+# ==================================================
+# 6. Command-line smoke test
+# ==================================================
+
 if __name__ == "__main__":
 
-    sample = (
-        "First paragraph.\n\n"
-        "Second paragraph is somewhat longer.\n"
-        "Third paragraph."
-    )
+    try:
+        sys.stdout.reconfigure(
+            encoding="utf-8", errors="replace"
+        )
+    except AttributeError:
+        pass
 
-    chunks = split_text(sample, max_chars=20)
+    validate_config()
 
-    print("Original:")
-    print(repr(sample))
+    samples = [
+        (
+            "A collection of ideas explored across physics, "
+            "mathematics, and philosophy.",
+            "Homepage",
+        ),
+        (
+            "(the origin is indeed a special case in which",
+            "Physics overview",
+        ),
+        (
+            "s approaches to physics.",
+            "Physics overview, sentence fragment split by "
+            "an inline link",
+        ),
+        (
+            "ZXQINLINE0QXZ is the derivative of ZXQINLINE1QXZ.",
+            "Inline math test",
+        ),
+    ]
 
-    print("\nChunks:")
-    for chunk in chunks:
-        print(repr(chunk))
-
-    print("\nReconstructed:")
-    print(repr("".join(chunks)))
-
-    assert "".join(chunks) == sample
-
-    print("\nChunking test passed!")
+    for sample, context in samples:
+        print("English:", sample)
+        print(
+            "Chinese:",
+            translate_text(sample, context=context),
+        )
+        print()

@@ -46,10 +46,25 @@ jobs:
             echo "{}" > scripts/translation_cache.json
           fi
 
+      - name: Check translation credentials
+        env:
+          ZH_API_KEY: ${{ secrets.ZH_API_KEY }}
+        run: |
+          if [ -z "$ZH_API_KEY" ]; then
+            echo "::error::Missing repository secret ZH_API_KEY."
+            echo "Add a DeepSeek API key as the repository secret"
+            echo "ZH_API_KEY (Settings -> Secrets and variables ->"
+            echo "Actions -> New repository secret) so the Chinese"
+            echo "translation step can run on every push."
+            exit 1
+          fi
+          echo "Translation API credentials are configured."
+
       - name: Translate Markdown articles
         env:
-          BAIDU_APP_ID: ${{ secrets.BAIDU_APP_ID }}
-          BAIDU_SECRET_KEY: ${{ secrets.BAIDU_SECRET_KEY }}
+          ZH_API_BASE: https://api.deepseek.com
+          ZH_API_KEY: ${{ secrets.ZH_API_KEY }}
+          ZH_MODEL: deepseek-chat
         run: |
           python scripts/markdown_translator.py
 
@@ -61,8 +76,9 @@ jobs:
 
       - name: Translate entire website HTML
         env:
-          BAIDU_APP_ID: ${{ secrets.BAIDU_APP_ID }}
-          BAIDU_SECRET_KEY: ${{ secrets.BAIDU_SECRET_KEY }}
+          ZH_API_BASE: https://api.deepseek.com
+          ZH_API_KEY: ${{ secrets.ZH_API_KEY }}
+          ZH_MODEL: deepseek-chat
         run: |
           python scripts/site_html_translator.py
 

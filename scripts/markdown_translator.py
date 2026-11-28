@@ -5,7 +5,7 @@ import json
 import hashlib
 
 from pathlib import Path
-from translator import translate_text
+from translator import translate_text, validate_config
 
 # --------------------------------------------------
 # Configuration
@@ -15,15 +15,6 @@ CONTENT_DIRECTORY = Path("src/content/articles")
 CHINESE_DIRECTORY = CONTENT_DIRECTORY / "zh-cn"
 
 MANIFEST_PATH = Path("scripts/translation-manifest.json")
-
-APP_ID = os.environ.get("BAIDU_APP_ID")
-SECRET_KEY = os.environ.get("BAIDU_SECRET_KEY")
-
-if not APP_ID or not SECRET_KEY:
-    raise RuntimeError(
-        "Missing Baidu credentials. "
-        "Check BAIDU_APP_ID and BAIDU_SECRET_KEY."
-    )
 
 # --------------------------------------------------
 # Discover English Markdown articles
@@ -282,7 +273,7 @@ def restore_blocks(markdown, protected_blocks):
 # 5. Translate the Markdown document
 # --------------------------------------------------
 
-def translate_markdown(markdown):
+def translate_markdown(markdown, context=None):
     """
     Translate Markdown prose into Chinese while preserving
     frontmatter, equations, code, inline math, and URLs.
@@ -297,8 +288,8 @@ def translate_markdown(markdown):
     # Protect inline content.
     body, protected_inline = protect_inline_content(body)
 
-    # Translate the remaining prose using Baidu.
-    translated_body = translate_text(body)
+    # Translate the remaining prose with the configured provider.
+    translated_body = translate_text(body, context=context)
 
     # Verify that every placeholder survived translation.
     for index in range(len(protected_blocks)):
@@ -371,6 +362,8 @@ def save_translated_markdown(translated_markdown, input_path):
 
 if __name__ == "__main__":
 
+    validate_config()
+
     articles = discover_articles()
     manifest = load_manifest()
 
@@ -420,7 +413,8 @@ if __name__ == "__main__":
             )
 
         translated_markdown = translate_markdown(
-            original_markdown
+            original_markdown,
+            context=f"Article: {relative_path}",
         )
 
         save_translated_markdown(
